@@ -5,6 +5,9 @@ void on_SendBtn_clicked();
 #include <QDialog>
 #include <QTcpServer> //监听套接字
 #include <QTcpSocket> //通信套接字
+#include <QUdpSocket>
+#include <QTimer>
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class networkNaster; }
@@ -17,6 +20,7 @@ class networkNaster : public QDialog
 public:
     networkNaster(QWidget *parent = nullptr);
     ~networkNaster();
+    void UdpSendMsg();
 
 signals:
     void OneClientConnected();
@@ -24,16 +28,24 @@ signals:
 
 private slots:
     void on_ConnectBtn_clicked();
-    void on_SendBtn_clicked();
+    void on_TcpSendBtn_clicked();
     void on_OneClientListend();
     //void on_GetOneClientMsg();
     void on_ShoeClientMsg(QByteArray array);
     void on_MSGError(QAbstractSocket::SocketError);
+    void on_UdpSendOnceBtn_clicked();
+    void on_UdpAutoSendBtn_clicked();
+    void on_TimerOutToAutoSendUdpMsg();
 
 private:
     Ui::networkNaster *ui;
     QTcpServer *m_pTcpServer;//监听套接字
     QTcpSocket *m_pTcpSocket;//通信套接字
-    static const int maxThreadNum = 10;
+    QUdpSocket *m_pUdpSocket;
+
+    QTimer *m_Timer;
+    bool m_isTimerBtnClicked;
+
+    //static const int maxThreadNum = 10;
 };
 #endif // NETWORKMASTER_H

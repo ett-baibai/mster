@@ -4,16 +4,20 @@
 #include <QtDebug>
 #include <QThread>
 #include "multithread.h"
+#include <QDateTime>
+
+#define mydebug qDebug()<< QDateTime::currentDateTime().toString("hh:mm:ss")<< ":"
 
 networkNaster::networkNaster(QWidget *parent)
     : QDialog(parent), ui(new Ui::networkNaster)
 {
     ui->setupUi(this);
     ui->ConnectBtn->setEnabled(false);
-    qDebug() << "主线程对象的地址: " << QThread::currentThread();
+    mydebug << "主线程的地址: " << QThread::currentThread();
 
     m_pTcpServer = NULL;
     m_pTcpSocket = NULL;
+    m_pUdpSocket = new QUdpSocket;
 
     m_pTcpServer = new QTcpServer(this);
     m_pTcpServer->listen(QHostAddress::Any,8888);
@@ -21,6 +25,12 @@ networkNaster::networkNaster(QWidget *parent)
     //有新连接
     QObject::connect(m_pTcpServer,&QTcpServer::newConnection,
                      this, &networkNaster::on_OneClientListend);
+
+    m_Timer=new QTimer;
+    QObject::connect(m_Timer, SIGNAL(timeout()),
+            this, SLOT(on_TimerOutToAutoSendUdpMsg()));
+
+    m_isTimerBtnClicked = false;
 
     //连接出错，（暂未实现）
     //QObject::connect(m_pTcpServer, SIGNAL(error(QAbstractSocket::SocketError)),
@@ -31,8 +41,14 @@ networkNaster::~networkNaster()
 {
     m_pTcpServer->close();
     m_pTcpServer->deleteLater();
-    delete m_pTcpServer;
-    delete m_pTcpSocket;
+
+    m_pUdpSocket->close();
+    m_pUdpSocket->deleteLater();
+
+    delete this->m_pTcpServer;
+    delete this->m_pTcpSocket;
+    delete this->m_pUdpSocket;
+    delete this->m_Timer;
     delete ui;
 }
 
@@ -75,7 +91,7 @@ void networkNaster::on_ConnectBtn_clicked()
     QMessageBox::information(this, "title", "wiating for adding");
 }
 
-void networkNaster::on_SendBtn_clicked()
+void networkNaster::on_TcpSendBtn_clicked()
 {
     if(NULL == m_pTcpSocket)
     {
@@ -102,4 +118,40 @@ void networkNaster::on_MSGError(QAbstractSocket::SocketError)
             break;
         }
     }
+}
+
+void networkNaster::on_UdpSendOnceBtn_clicked()
+{
+    mydebug<<"手动发送一次udp数据";
+    UdpSendMsg();
+}
+
+void networkNaster::on_UdpAutoSendBtn_clicked()
+{
+    if(false == m_isTimerBtnClicked)
+    {
+        mydebug<<("定时器启动");
+        ui->UdpAutoSendBtn->setText("transfering");
+        m_Timer->start(2000);
+        m_isTimerBtnClicked = true;
+    }
+
+    else
+    {
+        mydebug<<("定时器关闭");
+        ui->UdpAutoSendBtn->setText("UdpAutoSend");
+        m_Timer->stop();
+        m_isTimerBtnClicked = false;
+    }
+}
+
+void networkNaster::on_TimerOutToAutoSendUdpMsg()
+{
+    mydebug<<"自动发送一次udp数据";
+    UdpSendMsg();
+}
+
+void networkNaster::UdpSendMsg()
+{
+    m_pUdpSocket->writeDatagram("send me data",QHostAddress("127.0.0.1"), 6666);
 }
