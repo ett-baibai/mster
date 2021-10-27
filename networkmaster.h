@@ -31,10 +31,12 @@ private slots:
     void on_TcpSendBtn_clicked();
     void on_OneClientListend();
     //void on_GetOneClientMsg();
-    void on_ShoeClientMsg(QByteArray array);
+    void on_ShowClientMsg(QByteArray array);
     void on_MSGError(QAbstractSocket::SocketError);
     void on_UdpSendOnceBtn_clicked();
     void on_UdpAutoSendBtn_clicked();
+    void on_pushButton_clicked();
+
     void on_TimerOutToAutoSendUdpMsg();
 
 private:

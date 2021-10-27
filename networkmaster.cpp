@@ -70,10 +70,10 @@ void networkNaster::on_OneClientListend()
     subThread->start();
 
     QObject::connect(taskThread, &MultiThread::s_sendMsg,
-                     this, &networkNaster::on_ShoeClientMsg);
+                     this, &networkNaster::on_ShowClientMsg);
 }
 
-void networkNaster::on_ShoeClientMsg(QByteArray array)
+void networkNaster::on_ShowClientMsg(QByteArray array)
 {
     ui->MessageList->addItem(array);
 }
@@ -153,5 +153,12 @@ void networkNaster::on_TimerOutToAutoSendUdpMsg()
 
 void networkNaster::UdpSendMsg()
 {
-    m_pUdpSocket->writeDatagram("send me data",QHostAddress("127.0.0.1"), 6666);
+    //QString time = QDateTime::currentDateTime().toString("hh:mm:ss");
+    m_pUdpSocket->writeDatagram("send me data",QHostAddress("127.0.0.1"), 2333);
 }
+
+void networkNaster::on_pushButton_clicked()
+{
+    ui->MessageList->clear();
+}
+
