@@ -10,6 +10,7 @@ class MultiThread : public QObject
     Q_OBJECT
 public:
     explicit MultiThread(QObject *parent = nullptr);
+    ~MultiThread();
 
 signals:
     void s_sendMsg(QByteArray array);
@@ -20,7 +21,6 @@ public slots:
 
 private:
     QTcpSocket *m_pTcpSocket;
-
 };
 
 #endif // MULTITHREAD_H

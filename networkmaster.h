@@ -30,13 +30,12 @@ private slots:
     void on_ConnectBtn_clicked();
     void on_TcpSendBtn_clicked();
     void on_OneClientListend();
-    //void on_GetOneClientMsg();
-    void on_ShowClientMsg(QByteArray array);
-    void on_MSGError(QAbstractSocket::SocketError);
+    void on_OneClientDisconnect();
+    void on_ShowClientMsgFromOtherThread(QByteArray array);
+    void on_ShowClientMsgFrom();
     void on_UdpSendOnceBtn_clicked();
     void on_UdpAutoSendBtn_clicked();
-    void on_pushButton_clicked();
-
+    void on_ClearBtn_clicked();
     void on_TimerOutToAutoSendUdpMsg();
 
 private:
@@ -48,6 +47,8 @@ private:
     QTimer *m_Timer;
     bool m_isTimerBtnClicked;
 
+    unsigned short m_tcpPort;
+    unsigned short m_udpPort;
     //static const int maxThreadNum = 10;
 };
 #endif // NETWORKMASTER_H

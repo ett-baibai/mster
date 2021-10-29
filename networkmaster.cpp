@@ -15,12 +15,15 @@ networkNaster::networkNaster(QWidget *parent)
     ui->ConnectBtn->setEnabled(false);
     mydebug << "主线程的地址: " << QThread::currentThread();
 
+    m_tcpPort = 6666;
+    m_udpPort = 8888;
+
     m_pTcpServer = NULL;
     m_pTcpSocket = NULL;
     m_pUdpSocket = new QUdpSocket;
 
     m_pTcpServer = new QTcpServer(this);
-    m_pTcpServer->listen(QHostAddress::Any,8888);
+    m_pTcpServer->listen(QHostAddress::Any,m_tcpPort);
 
     //有新连接
     QObject::connect(m_pTcpServer,&QTcpServer::newConnection,
@@ -32,22 +35,13 @@ networkNaster::networkNaster(QWidget *parent)
 
     m_isTimerBtnClicked = false;
 
-    //连接出错，（暂未实现）
-    //QObject::connect(m_pTcpServer, SIGNAL(error(QAbstractSocket::SocketError)),
-    //                 this, SLOT(on_MSGError(QAbstractSocket::SocketError)));
 }
 
 networkNaster::~networkNaster()
 {
-    m_pTcpServer->close();
-    m_pTcpServer->deleteLater();
-
-    m_pUdpSocket->close();
-    m_pUdpSocket->deleteLater();
-
-    delete this->m_pTcpServer;
     delete this->m_pTcpSocket;
     delete this->m_pUdpSocket;
+    delete this->m_pTcpServer;
     delete this->m_Timer;
     delete ui;
 }
@@ -55,11 +49,17 @@ networkNaster::~networkNaster()
 void networkNaster::on_OneClientListend()
 {
     m_pTcpSocket = m_pTcpServer->nextPendingConnection();
-    //获取对方的IP和端口
+    //获取客户端的IP和端口
     ui->MessageList->addItem(m_pTcpSocket->peerAddress().toString() + " " +
                              QString::number(m_pTcpSocket->peerPort()) + " 连接成功，socket: " +
                              QString::number(m_pTcpServer->socketDescriptor()));
+    //检测客户端的断开
+    QObject::connect(m_pTcpSocket,&QTcpSocket::disconnected,
+                     this, &networkNaster::on_OneClientDisconnect);
 
+    QObject::connect(m_pTcpSocket,&QTcpSocket::readyRead,
+            this, &networkNaster::on_ShowClientMsgFrom);
+    /*
     QThread *subThread = new QThread;
     MultiThread *taskThread = new MultiThread;
     taskThread->moveToThread(subThread);
@@ -71,20 +71,27 @@ void networkNaster::on_OneClientListend()
 
     QObject::connect(taskThread, &MultiThread::s_sendMsg,
                      this, &networkNaster::on_ShowClientMsg);
+                     */
 }
 
-void networkNaster::on_ShowClientMsg(QByteArray array)
+void networkNaster::on_OneClientDisconnect()
 {
-    ui->MessageList->addItem(array);
+    QString hostAddress=m_pTcpSocket->QAbstractSocket::peerAddress().toString();
+    qDebug()<<"客户端 "<<hostAddress<<" 断开连接";
+    m_pTcpSocket->close();
+    m_pUdpSocket->close();
 }
-//void networkNaster::on_GetOneClientMsg()
-/*
+
+void networkNaster::on_ShowClientMsgFrom()
 {
-    //从通信套接字中取出内容
     QByteArray array = m_pTcpSocket->readAll();
     ui->MessageList->addItem(array);
 }
-*/
+
+void networkNaster::on_ShowClientMsgFromOtherThread(QByteArray array)
+{
+    ui->MessageList->addItem(array);
+}
 
 void networkNaster::on_ConnectBtn_clicked()
 {
@@ -99,25 +106,20 @@ void networkNaster::on_TcpSendBtn_clicked()
         return;
     }
     QString str = ui->SendMsgEdit->toPlainText();
-    m_pTcpSocket->write(str.toUtf8().data());
-}
+    qint64 WriteResult = m_pTcpSocket->write(str.toUtf8().data());
 
-void networkNaster::on_MSGError(QAbstractSocket::SocketError)
-{
-    switch(m_pTcpSocket->error())
+    bool bFlush = m_pTcpSocket->flush();
+
+    if(WriteResult != -1 && bFlush == 1)//judge send succeedly or not
     {
-        case QAbstractSocket::RemoteHostClosedError://客户端断开
+        if(WriteResult == 0)
+            QMessageBox::information(this,"error",tr("WriteResult = 0"));
+        else
         {
-            QString hostAddress=m_pTcpSocket->QAbstractSocket::peerAddress().toString();
-            qDebug()<<"客户端 "<<hostAddress<<" 断开连接";
-            break;
-        }
-        default:
-        {
-            QMessageBox::information(this, "show", m_pTcpSocket->errorString());
-            break;
         }
     }
+    else
+        qDebug()<<"failed to write!";
 }
 
 void networkNaster::on_UdpSendOnceBtn_clicked()
@@ -154,10 +156,10 @@ void networkNaster::on_TimerOutToAutoSendUdpMsg()
 void networkNaster::UdpSendMsg()
 {
     //QString time = QDateTime::currentDateTime().toString("hh:mm:ss");
-    m_pUdpSocket->writeDatagram("send me data",QHostAddress("127.0.0.1"), 2333);
+    m_pUdpSocket->writeDatagram("send me data",QHostAddress("127.0.0.1"), m_udpPort);
 }
 
-void networkNaster::on_pushButton_clicked()
+void networkNaster::on_ClearBtn_clicked()
 {
     ui->MessageList->clear();
 }

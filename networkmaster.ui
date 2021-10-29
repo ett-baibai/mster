@@ -85,7 +85,7 @@
     <string>UdpAutoSend</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="ClearBtn">
    <property name="geometry">
     <rect>
      <x>190</x>
