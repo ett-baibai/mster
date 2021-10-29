@@ -53,10 +53,11 @@ void networkNaster::on_OneClientListend()
     ui->MessageList->addItem(m_pTcpSocket->peerAddress().toString() + " " +
                              QString::number(m_pTcpSocket->peerPort()) + " 连接成功，socket: " +
                              QString::number(m_pTcpServer->socketDescriptor()));
-    //检测客户端的断开
+    //监测客户端的断开
     QObject::connect(m_pTcpSocket,&QTcpSocket::disconnected,
                      this, &networkNaster::on_OneClientDisconnect);
 
+    //有数据就读取
     QObject::connect(m_pTcpSocket,&QTcpSocket::readyRead,
             this, &networkNaster::on_ShowClientMsgFrom);
     /*
@@ -77,7 +78,7 @@ void networkNaster::on_OneClientListend()
 void networkNaster::on_OneClientDisconnect()
 {
     QString hostAddress=m_pTcpSocket->QAbstractSocket::peerAddress().toString();
-    qDebug()<<"客户端 "<<hostAddress<<" 断开连接";
+    ui->MessageList->addItem("客户端 " + hostAddress + " 断开连接");
     m_pTcpSocket->close();
     m_pUdpSocket->close();
 }
