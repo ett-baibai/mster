@@ -9,14 +9,21 @@
 #define mydebug qDebug()<< QDateTime::currentDateTime().toString("hh:mm:ss")<< ":"
 
 networkNaster::networkNaster(QWidget *parent)
-    : QDialog(parent), ui(new Ui::networkNaster)
+    : QDialog(parent), ui(new Ui::networkNaster), m_tcpPort(6666), m_udpPort(8888)
 {
     ui->setupUi(this);
     ui->ConnectBtn->setEnabled(false);
-    mydebug << "主线程的地址: " << QThread::currentThread();
+    ui->UdpSendOnceBtn->setEnabled(false);
+    ui->UdpAutoSendBtn->setEnabled(false);
 
-    m_tcpPort = 6666;
-    m_udpPort = 8888;
+    m_arr ="send me data\n";
+
+    for(int i = 0; i < 100; i++)
+    {
+        m_arr += "send me data\n";
+    }
+
+    mydebug << "主线程的地址: " << QThread::currentThread();
 
     m_pTcpServer = NULL;
     m_pTcpSocket = NULL;
@@ -29,12 +36,23 @@ networkNaster::networkNaster(QWidget *parent)
     QObject::connect(m_pTcpServer,&QTcpServer::newConnection,
                      this, &networkNaster::on_OneClientListend);
 
-    m_Timer=new QTimer;
-    QObject::connect(m_Timer, SIGNAL(timeout()),
+
+    m_TcpTimer = new QTimer;
+    QObject::connect(m_TcpTimer, SIGNAL(timeout()),
+            this, SLOT(on_TimerOutToAutoSendTcpMsg()));
+    m_isTcpTimerBtnClicked = false;
+    m_tcpSendIndex = 1;
+
+    m_UdpTimer = new QTimer;
+    QObject::connect(m_UdpTimer, SIGNAL(timeout()),
             this, SLOT(on_TimerOutToAutoSendUdpMsg()));
+    m_isUdpTimerBtnClicked = false;
 
-    m_isTimerBtnClicked = false;
+    m_indexDataArry = 0;
 
+    m_paintWidget = new paintWidget;
+    QObject::connect(this, &networkNaster::s_PaintPoint,
+                     m_paintWidget, &paintWidget::on_PaintPoint);
 }
 
 networkNaster::~networkNaster()
@@ -42,7 +60,9 @@ networkNaster::~networkNaster()
     delete this->m_pTcpSocket;
     delete this->m_pUdpSocket;
     delete this->m_pTcpServer;
-    delete this->m_Timer;
+    delete this->m_TcpTimer;
+    delete this->m_UdpTimer;
+    delete m_paintWidget;
     delete ui;
 }
 
@@ -86,7 +106,24 @@ void networkNaster::on_OneClientDisconnect()
 void networkNaster::on_ShowClientMsgFrom()
 {
     QByteArray array = m_pTcpSocket->readAll();
-    ui->MessageList->addItem(array);
+    size_t length = array.length();
+    for(size_t i= 0; i < length; i++)
+    {
+        qDebug()<<(unsigned char)(array[i]);
+        if(m_indexDataArry < m_NumDataArry)
+        {
+            m_saveDataArry[m_indexDataArry] = (unsigned char)(array[i]);
+            m_indexDataArry++;
+        }
+    }
+
+    if(m_indexDataArry == m_NumDataArry)
+    {
+        m_indexDataArry++;
+        m_paintWidget->show();
+        emit s_PaintPoint(m_saveDataArry);//存满m_NumDataArry个数据就绘
+    }
+    //ui->MessageList->addItem(array);
 }
 
 void networkNaster::on_ShowClientMsgFromOtherThread(QByteArray array)
@@ -96,14 +133,14 @@ void networkNaster::on_ShowClientMsgFromOtherThread(QByteArray array)
 
 void networkNaster::on_ConnectBtn_clicked()
 {
-    QMessageBox::information(this, "title", "wiating for adding");
+    QMessageBox::information(this, "title", "wiating for adding code");
 }
 
-void networkNaster::on_TcpSendBtn_clicked()
+void networkNaster::on_TcpSendOnceBtn_clicked()
 {
     if(NULL == m_pTcpSocket)
     {
-        QMessageBox::information(this, "err", "no connection");
+        QMessageBox::information(this, "err", "no tcp connection");
         return;
     }
     QString str = ui->SendMsgEdit->toPlainText();
@@ -123,6 +160,40 @@ void networkNaster::on_TcpSendBtn_clicked()
         qDebug()<<"failed to write!";
 }
 
+void networkNaster::on_TcpAutoSendBtn_clicked()
+{
+    if(false == m_isTcpTimerBtnClicked)
+    {
+        if(NULL == m_pTcpSocket)
+        {
+            QMessageBox::information(this, "err", "no tcp connection");
+            return;
+        }
+        mydebug<<("定时器启动");
+        ui->TcpAutoSendBtn->setText("transfering");
+        m_TcpTimer->start(1000);
+        m_isTcpTimerBtnClicked = true;
+    }
+
+    else
+    {
+        mydebug<<("定时器关闭");
+        ui->TcpAutoSendBtn->setText("TcpAutoSend");
+        m_TcpTimer->stop();
+        m_isTcpTimerBtnClicked = false;
+    }
+}
+
+void networkNaster::on_TimerOutToAutoSendTcpMsg()
+{
+    char dataStr[8] = {0};
+    snprintf(dataStr, 8, "%d#", m_tcpSendIndex);
+    m_pTcpSocket->write(dataStr);
+    //qDebug()<<"send"<<dataStr;
+    if(m_tcpSendIndex < 255)m_tcpSendIndex++;
+    else m_tcpSendIndex = 1;
+}
+
 void networkNaster::on_UdpSendOnceBtn_clicked()
 {
     mydebug<<"手动发送一次udp数据";
@@ -131,20 +202,20 @@ void networkNaster::on_UdpSendOnceBtn_clicked()
 
 void networkNaster::on_UdpAutoSendBtn_clicked()
 {
-    if(false == m_isTimerBtnClicked)
+    if(false == m_isUdpTimerBtnClicked)
     {
         mydebug<<("定时器启动");
         ui->UdpAutoSendBtn->setText("transfering");
-        m_Timer->start(2000);
-        m_isTimerBtnClicked = true;
+        m_UdpTimer->start(2000);
+        m_isUdpTimerBtnClicked = true;
     }
 
     else
     {
         mydebug<<("定时器关闭");
         ui->UdpAutoSendBtn->setText("UdpAutoSend");
-        m_Timer->stop();
-        m_isTimerBtnClicked = false;
+        m_UdpTimer->stop();
+        m_isUdpTimerBtnClicked = false;
     }
 }
 
@@ -157,11 +228,17 @@ void networkNaster::on_TimerOutToAutoSendUdpMsg()
 void networkNaster::UdpSendMsg()
 {
     //QString time = QDateTime::currentDateTime().toString("hh:mm:ss");
-    m_pUdpSocket->writeDatagram("send me data",QHostAddress("127.0.0.1"), m_udpPort);
+
+    m_pUdpSocket->writeDatagram(m_arr,QHostAddress("127.0.0.1"), m_udpPort);
 }
 
 void networkNaster::on_ClearBtn_clicked()
 {
     ui->MessageList->clear();
+}
+
+void networkNaster::on_paintWidgetBtn_clicked()
+{
+    m_paintWidget->show();
 }
 
