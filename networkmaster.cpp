@@ -190,7 +190,7 @@ void networkNaster::on_TimerOutToAutoSendTcpMsg()
     snprintf(dataStr, 8, "%d#", m_tcpSendIndex);
     m_pTcpSocket->write(dataStr);
     //qDebug()<<"send"<<dataStr;
-    if(m_tcpSendIndex < 255)m_tcpSendIndex++;
+    if(m_tcpSendIndex < 5)m_tcpSendIndex++;
     else m_tcpSendIndex = 1;
 }
 
