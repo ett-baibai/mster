@@ -10,7 +10,7 @@ paintWidget::paintWidget(QWidget *parent) : QWidget(parent),
     m_startX = 100;
     m_startY = m_constWindowHeight - 100;
 
-    //坐标轴宽度和高度
+    //the width and height of axis
     m_chartWidth = m_constWindowWidth - m_startX - 50;
     m_chartHeight = m_constWindowHeight - m_startX - 50;
 
@@ -29,41 +29,41 @@ paintWidget::~paintWidget()
 
 void paintWidget::mSetCanvas()
 {
-    resize(m_constWindowWidth, m_constWindowHeight); // 窗体大小 宽度1000 高度730
-    m_image = QImage(m_constWindowWidth, m_constWindowHeight, QImage::Format_RGB32);  // 画布的初始化大小设为，使用32位颜色
-    QColor backColor = qRgb(255, 255, 255);    // 画布初始化背景色使用白色
-    m_image.fill(backColor); // 对画布进行填充
+    resize(m_constWindowWidth, m_constWindowHeight); //reset window
+    m_image = QImage(m_constWindowWidth, m_constWindowHeight, QImage::Format_RGB32);
+    QColor backColor = qRgb(255, 255, 255);
+    m_image.fill(backColor);
 
     m_painter = new QPainter(&m_image);
-    m_painter->setRenderHint(QPainter::Antialiasing, true); // 设置反锯齿模式
+    m_painter->setRenderHint(QPainter::Antialiasing, true);
 }
 
 void paintWidget::mDrawCoordinateAxes()
 {
-    // 绘制X、Y轴
+    // x,y axis
     QPointF xStartPoint(m_startX, m_startY);
     QPointF xEndPoint(m_chartWidth + m_startX, m_startY);
-    m_painter->drawLine(xStartPoint, xEndPoint); // 坐标轴x宽度为width
+    m_painter->drawLine(xStartPoint, xEndPoint);
     m_painter->drawText(m_startX + m_chartWidth + 10, m_startY + 35, QString("index"));
 
     QPointF yStartPoint(m_startX, m_startY - m_chartHeight);
     QPointF yEndPoint(m_startX, m_startY);
-    m_painter->drawLine(yStartPoint, yEndPoint); // 坐标轴y高度为height
+    m_painter->drawLine(yStartPoint, yEndPoint);
     m_painter->drawText(m_startX - 45, m_startY - m_chartHeight - 20, QString("value"));
 
-    //绘制网格
+    //painting grand
     QPen penDotLine;
     penDotLine.setStyle(Qt::DotLine);
     m_painter->setPen(penDotLine);
     for (int i = 0; i < m_constYAxisPointNum; ++i)
     {
-        // 垂直线
+        //perpendicular
         m_painter->drawLine(m_startX + (i+1)* m_chartWidth/m_constYAxisPointNum, m_startY,
                          m_startX + (i+1)* m_chartWidth/m_constYAxisPointNum, m_startY - m_chartHeight);
     }
     for (int i = 0; i < m_constXAxisPointNum; ++i)
     {
-        // 水平线
+        //horizontal
         m_painter->drawLine(m_startX, m_startY-(i+1)*m_chartHeight/m_constXAxisPointNum,
                          m_startX + m_chartWidth, m_startY-(i+1)*m_chartHeight/m_constXAxisPointNum);
     }
@@ -71,25 +71,25 @@ void paintWidget::mDrawCoordinateAxes()
 
 void paintWidget::mSetAxisSpace()
 {
-    //显示x轴刻度值
-    m_painter->drawText(m_startX + 3, m_startY + 12, QString::number(0));//第一个刻度
+    //painting scale of x axis
+    m_painter->drawText(m_startX + 3, m_startY + 12, QString::number(0));//the first scale
     for (int i = 0; i < m_constXAxisPointNum - 1; ++i)
     {
         m_painter->drawText(m_startX + (i+0.9) * m_chartWidth / m_constXAxisPointNum, m_startY + 12,
                          QString::number((int)(m_xMin + (i+1) * ((m_xMax-m_xMin)/m_constXAxisPointNum))));
     }
     m_painter->drawText(m_startX + (m_constXAxisPointNum - 1 + 0.8) * m_chartWidth / m_constXAxisPointNum, m_startY + 12,
-                        QString::number(m_xMax));//最后一个刻度
+                        QString::number(m_xMax));//the last scale
 
-    //显示y轴刻度值
-    m_painter->drawText(m_startX - 45, m_startY - 3, QString::number(m_yMin));//第一个刻度
+    //painting scale of x axis
+    m_painter->drawText(m_startX - 45, m_startY - 3, QString::number(m_yMin));//the first scale
     for (int i = 0; i < m_constYAxisPointNum - 1; ++i)
     {
         m_painter->drawText(m_startX - 45, m_startY - (i+0.85) * m_chartHeight/m_constYAxisPointNum,
                          QString::number(m_yMin + (i+1) * ((m_yMax-m_yMin)/m_constYAxisPointNum)));
     }
     m_painter->drawText(m_startX - 45, m_startY - (m_constYAxisPointNum - 1 + 0.85) * m_chartHeight/m_constYAxisPointNum,
-                     QString::number(m_yMax));//最后一个刻度
+                     QString::number(m_yMax));//the last scale
 }
 
 void paintWidget::mResetAxis(double xMin, double xMax, double yMin, double yMax)
@@ -102,8 +102,8 @@ void paintWidget::mResetAxis(double xMin, double xMax, double yMin, double yMax)
 
     mSetAxisSpace();
 
-    m_kx = (double)(m_chartWidth / (xMax-xMin)); // x轴的比例系数
-    m_ky = (double)(m_chartHeight / (yMax-yMin));  // y轴的比例系数
+    m_kx = (double)(m_chartWidth / (xMax-xMin)); // scale factor of x axis
+    m_ky = (double)(m_chartHeight / (yMax-yMin));  // scale factor of y axis
 }
 
 void paintWidget::mDrawPoint(double x, double y)
@@ -134,10 +134,9 @@ void paintWidget::paintEvent(QPaintEvent *)
 
 void paintWidget::on_PaintPoint(unsigned char array[2048])
 {
-
     mSetCanvas();
     mDrawCoordinateAxes();
-    mResetAxis(0, 2048, 0, 20);
+    mResetAxis(0, 2048, 0, 255);
 
     for(int i = 0; i <= 2048; i++)
     {

@@ -23,7 +23,7 @@ networkNaster::networkNaster(QWidget *parent)
         m_arr += "send me data\n";
     }
 
-    mydebug << "主线程的地址: " << QThread::currentThread();
+    mydebug << "main thread address: " << QThread::currentThread();
 
     m_pTcpServer = NULL;
     m_pTcpSocket = NULL;
@@ -32,7 +32,7 @@ networkNaster::networkNaster(QWidget *parent)
     m_pTcpServer = new QTcpServer(this);
     m_pTcpServer->listen(QHostAddress::Any,m_tcpPort);
 
-    //有新连接
+    //catch new connecting require
     QObject::connect(m_pTcpServer,&QTcpServer::newConnection,
                      this, &networkNaster::on_OneClientListend);
 
@@ -50,6 +50,7 @@ networkNaster::networkNaster(QWidget *parent)
 
     m_indexDataArry = 0;
 
+    //paint
     m_paintWidget = new paintWidget;
     QObject::connect(this, &networkNaster::s_PaintPoint,
                      m_paintWidget, &paintWidget::on_PaintPoint);
@@ -69,15 +70,12 @@ networkNaster::~networkNaster()
 void networkNaster::on_OneClientListend()
 {
     m_pTcpSocket = m_pTcpServer->nextPendingConnection();
-    //获取客户端的IP和端口
     ui->MessageList->addItem(m_pTcpSocket->peerAddress().toString() + " " +
-                             QString::number(m_pTcpSocket->peerPort()) + " 连接成功，socket: " +
+                             QString::number(m_pTcpSocket->peerPort()) + " connected，socket: " +
                              QString::number(m_pTcpServer->socketDescriptor()));
-    //监测客户端的断开
     QObject::connect(m_pTcpSocket,&QTcpSocket::disconnected,
                      this, &networkNaster::on_OneClientDisconnect);
 
-    //有数据就读取
     QObject::connect(m_pTcpSocket,&QTcpSocket::readyRead,
             this, &networkNaster::on_ShowClientMsgFrom);
     /*
@@ -98,7 +96,7 @@ void networkNaster::on_OneClientListend()
 void networkNaster::on_OneClientDisconnect()
 {
     QString hostAddress=m_pTcpSocket->QAbstractSocket::peerAddress().toString();
-    ui->MessageList->addItem("客户端 " + hostAddress + " 断开连接");
+    ui->MessageList->addItem("client " + hostAddress + " disconnected");
     m_pTcpSocket->close();
     m_pUdpSocket->close();
 
@@ -118,18 +116,18 @@ void networkNaster::on_ShowClientMsgFrom()
     for(size_t i= 0; i < length; i++)
     {
         qDebug()<<(unsigned char)(array[i]);
-        if(m_indexDataArry < m_NumDataArry)
+        if(m_indexDataArry < m_DataArryNum)
         {
             m_saveDataArry[m_indexDataArry] = (unsigned char)(array[i]);
             m_indexDataArry++;
         }
     }
 
-    if(m_indexDataArry == m_NumDataArry)
+    if(m_indexDataArry == m_DataArryNum)
     {
         m_indexDataArry++;
         m_paintWidget->show();
-        emit s_PaintPoint(m_saveDataArry);//存满m_NumDataArry个数据就绘
+        emit s_PaintPoint(m_saveDataArry);//to paint
     }
     //ui->MessageList->addItem(array);
 }
@@ -177,7 +175,7 @@ void networkNaster::on_TcpAutoSendBtn_clicked()
             QMessageBox::information(this, "err", "no tcp connection");
             return;
         }
-        mydebug<<("定时器启动");
+        mydebug<<("start tcp timer");
         ui->TcpAutoSendBtn->setText("transfering");
         m_TcpTimer->start(1000);
         m_isTcpTimerBtnClicked = true;
@@ -185,7 +183,7 @@ void networkNaster::on_TcpAutoSendBtn_clicked()
 
     else
     {
-        mydebug<<("定时器关闭");
+        mydebug<<("close tcp timer");
         ui->TcpAutoSendBtn->setText("TcpAutoSend");
         m_TcpTimer->stop();
         m_isTcpTimerBtnClicked = false;
@@ -204,7 +202,7 @@ void networkNaster::on_TimerOutToAutoSendTcpMsg()
 
 void networkNaster::on_UdpSendOnceBtn_clicked()
 {
-    mydebug<<"手动发送一次udp数据";
+    mydebug<<"mannual send udp data once";
     UdpSendMsg();
 }
 
@@ -212,7 +210,7 @@ void networkNaster::on_UdpAutoSendBtn_clicked()
 {
     if(false == m_isUdpTimerBtnClicked)
     {
-        mydebug<<("定时器启动");
+        mydebug<<("start udp timer");
         ui->UdpAutoSendBtn->setText("transfering");
         m_UdpTimer->start(2000);
         m_isUdpTimerBtnClicked = true;
@@ -220,7 +218,7 @@ void networkNaster::on_UdpAutoSendBtn_clicked()
 
     else
     {
-        mydebug<<("定时器关闭");
+        mydebug<<("close udp timer");
         ui->UdpAutoSendBtn->setText("UdpAutoSend");
         m_UdpTimer->stop();
         m_isUdpTimerBtnClicked = false;
@@ -229,7 +227,7 @@ void networkNaster::on_UdpAutoSendBtn_clicked()
 
 void networkNaster::on_TimerOutToAutoSendUdpMsg()
 {
-    mydebug<<"自动发送一次udp数据";
+    mydebug<<"atuo send udp data once";
     UdpSendMsg();
 }
 
@@ -247,6 +245,11 @@ void networkNaster::on_ClearBtn_clicked()
 
 void networkNaster::on_paintWidgetBtn_clicked()
 {
+    for(unsigned int i = 0; i < m_DataArryNum; i++)
+    {
+        m_saveDataArry[i] = (i + 1) % 256;
+    }
     m_paintWidget->show();
+    emit s_PaintPoint(m_saveDataArry);//to paint
 }
 

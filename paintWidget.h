@@ -5,6 +5,7 @@
 #include <QtGui>
 #include <QPaintEvent>
 #include <QMainWindow>
+#include <QTimer>
 
 class paintWidget : public QWidget
 {
@@ -31,8 +32,8 @@ private:
     QImage m_image;
     QPainter *m_painter;
 
-    int m_startX;//x轴起始点
-    int m_startY;//y轴起始点
+    int m_startX;
+    int m_startY;
     int m_chartWidth;
     int m_chartHeight;
 
@@ -40,7 +41,7 @@ private:
     double m_xMax;
     double m_yMin;
     double m_yMax;
-    double m_kx; // x轴的系数
+    double m_kx;
     double m_ky;
 
     const int m_constXAxisPointNum;

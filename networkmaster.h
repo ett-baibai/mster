@@ -3,8 +3,8 @@ void on_SendBtn_clicked();
 #define NETWORKMASTER_H
 
 #include <QDialog>
-#include <QTcpServer> //监听套接字
-#include <QTcpSocket> //通信套接字
+#include <QTcpServer>
+#include <QTcpSocket>
 #include <QUdpSocket>
 #include <QTimer>
 #include "paintWidget.h"
@@ -19,8 +19,8 @@ class networkNaster : public QDialog
 
 private:
     Ui::networkNaster *ui;
-    QTcpServer *m_pTcpServer;//监听套接字
-    QTcpSocket *m_pTcpSocket;//通信套接字
+    QTcpServer *m_pTcpServer;
+    QTcpSocket *m_pTcpSocket;
     QUdpSocket *m_pUdpSocket;
 
     QTimer *m_TcpTimer;
@@ -35,8 +35,8 @@ private:
 
     QByteArray m_arr;
 
-    const static unsigned int m_NumDataArry = 2048;
-    unsigned char m_saveDataArry[m_NumDataArry];
+    const static unsigned int m_DataArryNum = 2048;
+    unsigned char m_saveDataArry[m_DataArryNum];
     unsigned int m_indexDataArry;
 
     paintWidget *m_paintWidget;
@@ -65,7 +65,7 @@ public:
 signals:
     void OneClientConnected();
     void s_SubThreadStart(QTcpSocket *tcpSocket);
-    void s_PaintPoint(unsigned char m_saveDataArry[m_NumDataArry]);
+    void s_PaintPoint(unsigned char m_saveDataArry[m_DataArryNum]);
 
 };
-#endif // NETWORKMASTER_H
+#endif
