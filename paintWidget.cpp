@@ -2,7 +2,7 @@
 
 paintWidget::paintWidget(QWidget *parent) : QWidget(parent),
     m_constXAxisPointNum(50),
-    m_constYAxisPointNum(51),
+    m_constYAxisPointNum(20),
     m_constWindowWidth(1900),
     m_constWindowHeight(1000)
 {
@@ -137,7 +137,7 @@ void paintWidget::on_PaintPoint(unsigned char array[2048])
 
     mSetCanvas();
     mDrawCoordinateAxes();
-    mResetAxis(0, 2048, 0, 255);
+    mResetAxis(0, 2048, 0, 20);
 
     for(int i = 0; i <= 2048; i++)
     {

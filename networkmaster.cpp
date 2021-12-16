@@ -101,6 +101,14 @@ void networkNaster::on_OneClientDisconnect()
     ui->MessageList->addItem("客户端 " + hostAddress + " 断开连接");
     m_pTcpSocket->close();
     m_pUdpSocket->close();
+
+    if(ui->TcpAutoSendBtn->text() == "transfering")
+    {
+        mydebug<<("close tcp timer");
+        ui->TcpAutoSendBtn->setText("TcpAutoSend");
+        m_TcpTimer->stop();
+        m_isTcpTimerBtnClicked = false;
+    }
 }
 
 void networkNaster::on_ShowClientMsgFrom()
