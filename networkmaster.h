@@ -16,6 +16,10 @@ QT_END_NAMESPACE
 class networkNaster : public QDialog
 {
     Q_OBJECT
+public:
+    networkNaster(QWidget *parent = nullptr);
+    ~networkNaster();
+    void UdpSendMsg();
 
 private:
     Ui::networkNaster *ui;
@@ -56,11 +60,6 @@ private slots:
     void on_TimerOutToAutoSendUdpMsg();
     void on_TcpAutoSendBtn_clicked();
     void on_paintWidgetBtn_clicked();
-
-public:
-    networkNaster(QWidget *parent = nullptr);
-    ~networkNaster();
-    void UdpSendMsg();
 
 signals:
     void OneClientConnected();

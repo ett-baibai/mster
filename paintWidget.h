@@ -5,6 +5,7 @@
 #include <QtGui>
 #include <QPaintEvent>
 #include <QMainWindow>
+#include <QVector>
 #include <QTimer>
 
 class paintWidget : public QWidget
@@ -22,7 +23,9 @@ public:
 
 public slots:
     void onRefresh();
-    void on_PaintPoint(unsigned char array[2048]);
+    void on_GetPointData(unsigned char array[2048]);
+    void on_TimerOutToEnqueue();
+    void on_TimerOutToPaint();
 
 protected:
      void paintEvent(QPaintEvent *);
@@ -48,6 +51,15 @@ private:
     const int m_constYAxisPointNum;
     const int m_constWindowWidth;
     const int m_constWindowHeight;
+
+    QVector<unsigned char> m_pointDataQueue;
+    int m_enqueueIndex;
+    int m_DequeueNum;
+    unsigned int m_lastXaxisStart;
+    unsigned int m_paintIndex;
+
+    QTimer *m_testEnqueueTimer;
+    QTimer *m_dequeueTimer;
 
 };
 

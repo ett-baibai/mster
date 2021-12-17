@@ -53,7 +53,7 @@ networkNaster::networkNaster(QWidget *parent)
     //paint
     m_paintWidget = new paintWidget;
     QObject::connect(this, &networkNaster::s_PaintPoint,
-                     m_paintWidget, &paintWidget::on_PaintPoint);
+                     m_paintWidget, &paintWidget::on_GetPointData);
 }
 
 networkNaster::~networkNaster()
@@ -247,7 +247,7 @@ void networkNaster::on_paintWidgetBtn_clicked()
 {
     for(unsigned int i = 0; i < m_DataArryNum; i++)
     {
-        m_saveDataArry[i] = (i + 1) % 256;
+        m_saveDataArry[i] = i % 256;
     }
     m_paintWidget->show();
     emit s_PaintPoint(m_saveDataArry);//to paint
