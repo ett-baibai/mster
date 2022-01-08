@@ -51,7 +51,7 @@ private:
     const int mk_axisXRange;
     const int mk_axisYRange;
 
-
+    QList<QPointF> m_pointData;
 
 
 

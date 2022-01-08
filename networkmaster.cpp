@@ -71,7 +71,7 @@ void networkNaster::on_OneClientListend()
 {
     m_pTcpSocket = m_pTcpServer->nextPendingConnection();
     ui->MessageList->addItem(m_pTcpSocket->peerAddress().toString() + " " +
-                             QString::number(m_pTcpSocket->peerPort()) + " connected，socket: " +
+                             QString::number(m_pTcpSocket->peerPort()) + " connected socket: " +
                              QString::number(m_pTcpServer->socketDescriptor()));
     QObject::connect(m_pTcpSocket,&QTcpSocket::disconnected,
                      this, &networkNaster::on_OneClientDisconnect);
@@ -111,6 +111,7 @@ void networkNaster::on_OneClientDisconnect()
 
 void networkNaster::on_ShowClientMsgFrom()
 {
+    qDebug()<<"receiving...";
     QByteArray array = m_pTcpSocket->readAll();
     size_t length = array.length();
     for(size_t i= 0; i < length; i++)

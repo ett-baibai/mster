@@ -10,7 +10,7 @@ paintWidget::paintWidget(QWidget *parent) : QWidget(parent),
     m_constWindowWidth(1900),
     m_constWindowHeight(1000),
     mk_axisXRange(100),
-    mk_axisYRange(255)
+    mk_axisYRange(250)
 {
     this->setWindowTitle("graph");
     resize(m_constWindowWidth, m_constWindowHeight); //reset window
@@ -87,14 +87,15 @@ void paintWidget::mSetAxes()
     m_axisX->setRange(0, mk_axisXRange);
     m_axisX->setLabelFormat("%d");
     m_axisX->setGridLineVisible(true);
-    m_axisX->setTickCount(10);
+    m_axisX->setTickCount(21);
+    m_axisX->setMinorTickCount(5);
     m_axisX->setTitleText("t");
 
     m_axisY->setRange(0, mk_axisYRange);
     m_axisY->setLabelFormat("%d");
     m_axisY->setGridLineVisible(true);
-    m_axisY->setTickCount(128);
-    //m_axisY->setMinorTickCount(5);
+    m_axisY->setTickCount(6);
+    m_axisY->setMinorTickCount(10);
     m_axisY->setTitleText("value");
 
     m_chart->addAxis(m_axisX, Qt::AlignBottom);
@@ -119,11 +120,11 @@ void paintWidget::on_GetPointData(unsigned char array[2048])
     mSetCanvas();
     mSetAxes();
 
-    for(int i = 0; i <= 100; i++)
+    for(int i = 0; i <= 200; i++)
     {
-        m_pointDataQueue.append(array[i]);
+        m_pointData.append(QPointF(i, array[i]));
     }
-
+    mSetGraphStyle(m_pointData);
     m_testEnqueueTimer->start(1000);
     m_dequeueTimer->start(500);
 }
