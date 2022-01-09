@@ -22,7 +22,7 @@ public:
 
 public slots:
     void onRefresh();
-    void on_PaintPoint(unsigned char array[2048]);
+    void on_PaintPoint(unsigned int array[2048]);
 
 protected:
      void paintEvent(QPaintEvent *);

@@ -132,7 +132,7 @@ void paintWidget::paintEvent(QPaintEvent *)
     painter.drawImage(0, 0, m_image);
 }
 
-void paintWidget::on_PaintPoint(unsigned char array[2048])
+void paintWidget::on_PaintPoint(unsigned int array[2048])
 {
     mSetCanvas();
     mDrawCoordinateAxes();

@@ -5,6 +5,7 @@
 #include <QThread>
 #include "multithread.h"
 #include <QDateTime>
+#include <string.h>
 
 #define mydebug qDebug()<< QDateTime::currentDateTime().toString("hh:mm:ss")<< ":"
 
@@ -48,6 +49,7 @@ networkNaster::networkNaster(QWidget *parent)
             this, SLOT(on_TimerOutToAutoSendUdpMsg()));
     m_isUdpTimerBtnClicked = false;
 
+    m_recvRawDataCache.clear();
     m_indexDataArry = 0;
 
     //paint
@@ -77,7 +79,7 @@ void networkNaster::on_OneClientListend()
                      this, &networkNaster::on_OneClientDisconnect);
 
     QObject::connect(m_pTcpSocket,&QTcpSocket::readyRead,
-            this, &networkNaster::on_ShowClientMsgFrom);
+            this, &networkNaster::on_HandleClientMsg);
     /*
     QThread *subThread = new QThread;
     MultiThread *taskThread = new MultiThread;
@@ -109,19 +111,27 @@ void networkNaster::on_OneClientDisconnect()
     }
 }
 
-void networkNaster::on_ShowClientMsgFrom()
+void networkNaster::on_HandleClientMsg()
 {
+
     QByteArray array = m_pTcpSocket->readAll();
-    size_t length = array.length();
-    for(size_t i= 0; i < length; i++)
+    for(int i = 0; i< array.length(); i++)
     {
-        qDebug()<<(unsigned char)(array[i]);
-        if(m_indexDataArry < m_DataArryNum)
-        {
-            m_saveDataArry[m_indexDataArry] = (unsigned char)(array[i]);
-            m_indexDataArry++;
-        }
+        m_recvRawDataCache.enqueue((unsigned char)array[i]);
+        //qDebug()<<"en: "<<(unsigned char)(array[i]);
     }
+
+    int data = 0, index = 0;
+    while(m_recvRawDataCache.length() >= 4)
+    {
+        for(index = 0, data = 0; index < 4; index++)
+        {
+            data = data | (m_recvRawDataCache.dequeue() << (index * 8));
+        }
+        //qDebug()<<"de: "<< data;
+    }
+
+/*
 
     if(m_indexDataArry == m_DataArryNum)
     {
@@ -129,6 +139,7 @@ void networkNaster::on_ShowClientMsgFrom()
         m_paintWidget->show();
         emit s_PaintPoint(m_saveDataArry);//to paint
     }
+    */
     //ui->MessageList->addItem(array);
 }
 
