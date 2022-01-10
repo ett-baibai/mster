@@ -5,7 +5,6 @@
 #include <QThread>
 #include "multithread.h"
 #include <QDateTime>
-#include <string.h>
 
 #define mydebug qDebug()<< QDateTime::currentDateTime().toString("hh:mm:ss")<< ":"
 
@@ -16,15 +15,7 @@ networkNaster::networkNaster(QWidget *parent)
     ui->ConnectBtn->setEnabled(false);
     ui->UdpSendOnceBtn->setEnabled(false);
     ui->UdpAutoSendBtn->setEnabled(false);
-
-    m_arr ="send me data\n";
-
-    for(int i = 0; i < 100; i++)
-    {
-        m_arr += "send me data\n";
-    }
-
-    mydebug << "main thread address: " << QThread::currentThread();
+    //mydebug << "main thread address: " << QThread::currentThread();
 
     m_pTcpServer = NULL;
     m_pTcpSocket = NULL;
@@ -50,12 +41,11 @@ networkNaster::networkNaster(QWidget *parent)
     m_isUdpTimerBtnClicked = false;
 
     m_recvRawDataCache.clear();
-    m_indexDataArry = 0;
 
     //paint
-    m_paintWidget = new paintWidget;
-    QObject::connect(this, &networkNaster::s_PaintPoint,
-                     m_paintWidget, &paintWidget::on_PaintPoint);
+    //m_paintWidget = new paintWidget;
+    //QObject::connect(this, &networkNaster::s_PaintPoint,
+    //                 m_paintWidget, &paintWidget::on_PaintPoint);
 }
 
 networkNaster::~networkNaster()
@@ -65,7 +55,7 @@ networkNaster::~networkNaster()
     delete this->m_pTcpServer;
     delete this->m_TcpTimer;
     delete this->m_UdpTimer;
-    delete m_paintWidget;
+    //delete m_paintWidget;
     delete ui;
 }
 
@@ -73,7 +63,7 @@ void networkNaster::on_OneClientListend()
 {
     m_pTcpSocket = m_pTcpServer->nextPendingConnection();
     ui->MessageList->addItem(m_pTcpSocket->peerAddress().toString() + " " +
-                             QString::number(m_pTcpSocket->peerPort()) + " connected，socket: " +
+                             QString::number(m_pTcpSocket->peerPort()) + " connected, socket: " +
                              QString::number(m_pTcpServer->socketDescriptor()));
     QObject::connect(m_pTcpSocket,&QTcpSocket::disconnected,
                      this, &networkNaster::on_OneClientDisconnect);
@@ -113,7 +103,6 @@ void networkNaster::on_OneClientDisconnect()
 
 void networkNaster::on_HandleClientMsg()
 {
-
     QByteArray array = m_pTcpSocket->readAll();
     for(int i = 0; i< array.length(); i++)
     {
@@ -246,7 +235,7 @@ void networkNaster::UdpSendMsg()
 {
     //QString time = QDateTime::currentDateTime().toString("hh:mm:ss");
 
-    m_pUdpSocket->writeDatagram(m_arr,QHostAddress("127.0.0.1"), m_udpPort);
+    //m_pUdpSocket->writeDatagram(m_arr,QHostAddress("127.0.0.1"), m_udpPort);
 }
 
 void networkNaster::on_ClearBtn_clicked()
@@ -256,11 +245,12 @@ void networkNaster::on_ClearBtn_clicked()
 
 void networkNaster::on_paintWidgetBtn_clicked()
 {
+    /*
     for(unsigned int i = 0; i < m_DataArryNum; i++)
     {
         m_saveDataArry[i] = (i + 1) % 256;
     }
     m_paintWidget->show();
     emit s_PaintPoint(m_saveDataArry);//to paint
+    */
 }
-

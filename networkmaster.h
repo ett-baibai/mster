@@ -8,7 +8,7 @@ void on_SendBtn_clicked();
 #include <QUdpSocket>
 #include <QTimer>
 #include <QQueue>
-#include "paintWidget.h"
+//#include "paintWidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class networkNaster; }
@@ -35,14 +35,8 @@ private:
     const unsigned short m_udpPort;
 
     QQueue<unsigned char> m_recvRawDataCache;
-    QByteArray m_arr;
 
-    const static unsigned int m_DataArryNum = 2048;
-    unsigned int m_saveDataArry[m_DataArryNum];
-    unsigned int m_indexDataArry;
-
-    paintWidget *m_paintWidget;
-    //static const int maxThreadNum = 10;
+    //paintWidget *m_paintWidget;
 
 private slots:
     void on_ConnectBtn_clicked();
@@ -67,7 +61,7 @@ public:
 signals:
     void OneClientConnected();
     void s_SubThreadStart(QTcpSocket *tcpSocket);
-    void s_PaintPoint(unsigned int m_saveDataArry[m_DataArryNum]);
+    void s_PaintPoint(QQueue<unsigned int> dataQueue);
 
 };
 #endif
