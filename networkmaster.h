@@ -1,4 +1,3 @@
-void on_SendBtn_clicked();
 #ifndef NETWORKMASTER_H
 #define NETWORKMASTER_H
 
@@ -7,7 +6,8 @@ void on_SendBtn_clicked();
 #include <QTcpSocket>
 #include <QUdpSocket>
 #include <QTimer>
-#include "paintWidget.h"
+#include <QQueue>
+//#include "paintWidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class networkNaster; }
@@ -37,14 +37,9 @@ private:
     const unsigned short m_tcpPort;
     const unsigned short m_udpPort;
 
-    QByteArray m_arr;
+    QQueue<unsigned char> m_recvRawDataCache;
 
-    const static unsigned int m_DataArryNum = 2048;
-    unsigned char m_saveDataArry[m_DataArryNum];
-    unsigned int m_indexDataArry;
-
-    paintWidget *m_paintWidget;
-    //static const int maxThreadNum = 10;
+    //paintWidget *m_paintWidget;
 
 private slots:
     void on_ConnectBtn_clicked();
@@ -52,7 +47,7 @@ private slots:
     void on_OneClientListend();
     void on_OneClientDisconnect();
     void on_ShowClientMsgFromOtherThread(QByteArray array);
-    void on_ShowClientMsgFrom();
+    void on_HandleClientMsg();
     void on_UdpSendOnceBtn_clicked();
     void on_UdpAutoSendBtn_clicked();
     void on_ClearBtn_clicked();
@@ -64,7 +59,7 @@ private slots:
 signals:
     void OneClientConnected();
     void s_SubThreadStart(QTcpSocket *tcpSocket);
-    void s_PaintPoint(unsigned char m_saveDataArry[m_DataArryNum]);
+    void s_PaintPoint(QQueue<unsigned int> dataQueue);
 
 };
 #endif
