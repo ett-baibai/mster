@@ -12,12 +12,10 @@ CONFIG += c++11
 
 SOURCES += \
     main.cpp \
-    multithread.cpp \
     networkmaster.cpp \
     paintWidget.cpp
 
 HEADERS += \
-    multithread.h \
     networkmaster.h \
     paintWidget.h
 
