@@ -1,4 +1,3 @@
-void on_SendBtn_clicked();
 #ifndef NETWORKMASTER_H
 #define NETWORKMASTER_H
 
