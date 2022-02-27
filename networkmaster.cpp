@@ -107,17 +107,18 @@ void networkNaster::on_HandleClientMsg()
     for(int i = 0; i< array.length(); i++)
     {
         m_recvRawDataCache.enqueue((unsigned char)array[i]);
-        //qDebug()<<"en: "<<(unsigned char)(array[i]);
+        qDebug()<<"en: "<<(unsigned char)(array[i]);
     }
 
-    int data = 0, index = 0;
+    int data = 0, index = 0, bit[4] = {0};
     while(m_recvRawDataCache.length() >= 4)
     {
         for(index = 0, data = 0; index < 4; index++)
         {
-            data = data | (m_recvRawDataCache.dequeue() << (index * 8));
+            bit[index] = m_recvRawDataCache.dequeue();
         }
-        //qDebug()<<"de: "<< data;
+        data = bit[0] | (bit[1] << 8) | (bit[2] << 16) | (bit[3] << 24);
+        qDebug()<<"de: "<< data;
     }
 
 /*

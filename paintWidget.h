@@ -3,23 +3,9 @@
 
 #include <QWidget>
 #include <QtGui>
-#include <QtCharts/QChart>
-#include <QtCharts\QChartView>
-#include <QPointF>
-#include <QList>
-#include <QWidget>
-#include <QGraphicsItem>
-#include <QSplineSeries>
-#include <QValueAxis>
+#include <QPaintEvent>
 #include <QMainWindow>
 #include <QTimer>
-
-QT_CHARTS_BEGIN_NAMESPACE
-class QSplineSeries;
-class QValueAxis;                 //just introduce these two classes rather than their head file
-QT_CHARTS_END_NAMESPACE
-
-QT_CHARTS_USE_NAMESPACE //it's necessary to add this code for using QT chart
 
 class paintWidget : public QWidget
 {
@@ -29,40 +15,20 @@ public:
     ~paintWidget();
 
     void mSetCanvas();
-    void mSetAxes();
-    void mSetGraphStyle(QList<QPointF> &data);
+    void mDrawCoordinateAxes();
+    void mSetAxisSpace();
+    void mResetAxis(double xMin, double xMax, double yMin, double yMax);
+    void mDrawPoint(double x, double y);
 
 public slots:
-    void on_GetPointData(unsigned char array[2048]);
-    void on_TimerOutToEnqueue();
-    void on_TimerOutToPaint();
+    void onRefresh();
+    void on_PaintPoint(unsigned int array[2048]);
+
+protected:
+     void paintEvent(QPaintEvent *);
+
 
 private:
-    QChart * m_chart;   //pen
-    QChartView *m_chartView;   //canvas
-    QList<QSplineSeries *> m_serieslist;
-    QSplineSeries *m_series;
-
-    QValueAxis *m_axisX;
-    QValueAxis *m_axisY;
-
-    const int m_constWindowWidth;
-    const int m_constWindowHeight;
-    const int mk_axisXRange;
-    const int mk_axisYRange;
-
-    QList<QPointF> m_pointData;
-
-
-
-
-
-
-
-
-
-
-
     QImage m_image;
     QPainter *m_painter;
 
@@ -78,16 +44,10 @@ private:
     double m_kx;
     double m_ky;
 
-
-
-    QVector<unsigned char> m_pointDataQueue;
-    int m_enqueueIndex;
-    int m_DequeueNum;
-    unsigned int m_lastXaxisStart;
-    unsigned int m_paintIndex;
-
-    QTimer *m_testEnqueueTimer;
-    QTimer *m_dequeueTimer;
+    const int m_constXAxisPointNum;
+    const int m_constYAxisPointNum;
+    const int m_constWindowWidth;
+    const int m_constWindowHeight;
 
 };
 
