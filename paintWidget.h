@@ -12,8 +12,6 @@
 #include <QGraphicsItem>
 #include <QSplineSeries>
 #include <QValueAxis>
-#include <QMainWindow>
-
 
 //just include double classes, not head file
 QT_CHARTS_BEGIN_NAMESPACE
@@ -34,76 +32,20 @@ public:
     void mDrawCoordinateAxes();
     void mInitImg();
     void mDrawLine(unsigned int data);
-    void mSetAxisSpace();
-    void mResetAxis(double xMin, double xMax, double yMin, double yMax);
-    void mDrawPoint(double x, double y);
-
 
 public slots:
     void on_TimerOutToAddPoint();
-
-
-
-    void onRefresh();
-    void on_PaintPoint(unsigned int array[2048]);
-
-protected:
-     void paintEvent(QPaintEvent *);
-
+    void on_PaintPoint(unsigned int data);
 
 private:
-    QChart * m_chart;
-    QChartView *m_chartView;
-    QSplineSeries *m_line;
-    QValueAxis *m_axisX;             //x坐标轴
-    QValueAxis *m_axisY;             //y坐标轴
-    QList<QSplineSeries *> m_serieslist;   //曲线列表，splineseries为光滑曲线
-    QTimer *m_addPointTimer;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    QImage m_image;
-    QPainter *m_painter;
-
-    int m_startX;
-    int m_startY;
-    int m_chartWidth;
-    int m_chartHeight;
-
-    double m_xMin;
-    double m_xMax;
-    double m_yMin;
-    double m_yMax;
-    double m_kx;
-    double m_ky;
-
-    const int m_constXAxisPointNum;
-    const int m_constYAxisPointNum;
     const int m_constWindowWidth;
     const int m_constWindowHeight;
-
+    QChart * m_chart;
+    QChartView *m_chartView;
+    QSplineSeries *m_line; //smooth curve
+    QValueAxis *m_axisX;
+    QValueAxis *m_axisY;
+    QTimer *m_addPointTimer;
 };
 
 #endif // PAINTWIDGET_H

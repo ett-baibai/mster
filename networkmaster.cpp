@@ -246,11 +246,8 @@ void networkNaster::on_ClearBtn_clicked()
 
 void networkNaster::on_paintWidgetBtn_clicked()
 {
-    unsigned int DataArry[100] = {0};
-    for(unsigned int i = 0; i < 100; i++)
-    {
-        DataArry[i] = i;
-    }
+    unsigned int data = 0;
+
     m_paintWidget->show();
-    emit s_PaintPoint(DataArry);//to paint
+    emit s_PaintPoint(data);//to paint
 }

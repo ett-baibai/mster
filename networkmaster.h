@@ -59,7 +59,6 @@ private slots:
 signals:
     void OneClientConnected();
     void s_SubThreadStart(QTcpSocket *tcpSocket);
-    void s_PaintPoint(unsigned int dataQueue[2048]);
-
+    void s_PaintPoint(unsigned int data);
 };
 #endif
