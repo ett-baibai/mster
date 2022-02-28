@@ -246,8 +246,11 @@ void networkNaster::on_ClearBtn_clicked()
 
 void networkNaster::on_paintWidgetBtn_clicked()
 {
-    unsigned int data = 0;
-
     m_paintWidget->show();
-    emit s_PaintPoint(data);//to paint
+
+    for(int i = 0; i < 1000; i++)
+    {
+        qDebug()<<i;
+        emit s_PaintPoint(i);
+    }
 }

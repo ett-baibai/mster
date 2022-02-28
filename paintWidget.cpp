@@ -12,12 +12,15 @@ paintWidget::paintWidget(QWidget *parent) : QWidget(parent),
     m_line = new QSplineSeries;
     m_axisX = new QValueAxis;
     m_axisY = new QValueAxis;
+    m_dataQueue.clear();
 
     mSetCanvas();
     mDrawCoordinateAxes();
     mInitImg();
+
     m_addPointTimer = new QTimer;
-    QObject::connect(m_addPointTimer, SIGNAL(timeout()), this, SLOT(on_TimerOutToAddPoint()));
+    QObject::connect(m_addPointTimer, SIGNAL(timeout()), this, SLOT(on_TimerOutToDraw()));
+    m_addPointTimer->start(1);
 }
 
 paintWidget::~paintWidget()
@@ -79,6 +82,7 @@ void paintWidget::mInitImg()
     m_line->setPen(splinePen);
 }
 
+/*
 void paintWidget::mDrawLine(unsigned int data)
 {
     static unsigned int axisX = 0;
@@ -101,16 +105,37 @@ void paintWidget::mDrawLine(unsigned int data)
 
     m_line->replace(pointData);
 }
+*/
 
 void paintWidget::on_PaintPoint(unsigned int data)
 {
-    m_addPointTimer->start(100);
+    m_dataQueue.enqueue(data);
 }
 
-void paintWidget::on_TimerOutToAddPoint()
+void paintWidget::on_TimerOutToDraw()
 {
-    static unsigned int data = 0;
-    mDrawLine(data);
-    data++;
+    int queueSize = m_dataQueue.size();
+    if(queueSize == 0)return;
+
+    static unsigned int axisX = 0;
+    QVector<QPointF> pointData;
+    pointData = m_line->pointsVector();
+    int dataCount = pointData.size();
+    if(dataCount < 100)
+    {
+        pointData.append(QPointF(axisX, sin(m_dataQueue.dequeue()) * 10));
+        axisX++;
+    }
+    else
+    {
+        pointData.removeFirst();
+        for(int i = 0; i < dataCount - 1; i++)
+        {
+            pointData[i].rx() -= 1;
+        }
+        pointData.append(QPointF(99, sin(m_dataQueue.dequeue()) * 10));
+    }
+    m_line->replace(pointData);
+
 }
 

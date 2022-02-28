@@ -12,6 +12,7 @@
 #include <QGraphicsItem>
 #include <QSplineSeries>
 #include <QValueAxis>
+#include <QQueue>
 
 //just include double classes, not head file
 QT_CHARTS_BEGIN_NAMESPACE
@@ -31,10 +32,9 @@ public:
     void mSetCanvas();
     void mDrawCoordinateAxes();
     void mInitImg();
-    void mDrawLine(unsigned int data);
 
 public slots:
-    void on_TimerOutToAddPoint();
+    void on_TimerOutToDraw();
     void on_PaintPoint(unsigned int data);
 
 private:
@@ -46,6 +46,7 @@ private:
     QValueAxis *m_axisX;
     QValueAxis *m_axisY;
     QTimer *m_addPointTimer;
+    QQueue<unsigned int> m_dataQueue;
 };
 
 #endif // PAINTWIDGET_H
