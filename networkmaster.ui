@@ -16,10 +16,10 @@
   <widget class="QPushButton" name="ConnectBtn">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>640</y>
-     <width>71</width>
-     <height>31</height>
+     <x>350</x>
+     <y>0</y>
+     <width>75</width>
+     <height>23</height>
     </rect>
    </property>
    <property name="text">
@@ -29,18 +29,18 @@
   <widget class="QTextEdit" name="SendMsgEdit">
    <property name="geometry">
     <rect>
-     <x>931</x>
-     <y>41</y>
-     <width>201</width>
-     <height>81</height>
+     <x>450</x>
+     <y>0</y>
+     <width>101</width>
+     <height>71</height>
     </rect>
    </property>
   </widget>
   <widget class="QPushButton" name="TcpSendOnceBtn">
    <property name="geometry">
     <rect>
-     <x>960</x>
-     <y>130</y>
+     <x>550</x>
+     <y>0</y>
      <width>91</width>
      <height>31</height>
     </rect>
@@ -52,18 +52,18 @@
   <widget class="QListWidget" name="MessageList">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>30</y>
-     <width>891</width>
-     <height>601</height>
+     <x>0</x>
+     <y>0</y>
+     <width>351</width>
+     <height>71</height>
     </rect>
    </property>
   </widget>
   <widget class="QPushButton" name="UdpSendOnceBtn">
    <property name="geometry">
     <rect>
-     <x>960</x>
-     <y>300</y>
+     <x>660</x>
+     <y>0</y>
      <width>91</width>
      <height>31</height>
     </rect>
@@ -75,8 +75,8 @@
   <widget class="QPushButton" name="UdpAutoSendBtn">
    <property name="geometry">
     <rect>
-     <x>960</x>
-     <y>360</y>
+     <x>660</x>
+     <y>40</y>
      <width>91</width>
      <height>31</height>
     </rect>
@@ -85,24 +85,11 @@
     <string>UdpAutoSend</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="ClearBtn">
-   <property name="geometry">
-    <rect>
-     <x>160</x>
-     <y>640</y>
-     <width>131</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Clear</string>
-   </property>
-  </widget>
   <widget class="QPushButton" name="TcpAutoSendBtn">
    <property name="geometry">
     <rect>
-     <x>960</x>
-     <y>190</y>
+     <x>550</x>
+     <y>40</y>
      <width>91</width>
      <height>31</height>
     </rect>
@@ -114,14 +101,27 @@
   <widget class="QPushButton" name="paintWidgetBtn">
    <property name="geometry">
     <rect>
-     <x>970</x>
-     <y>570</y>
+     <x>760</x>
+     <y>0</y>
      <width>91</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
     <string>paintWidget</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="ClearBtn">
+   <property name="geometry">
+    <rect>
+     <x>350</x>
+     <y>50</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Clear</string>
    </property>
   </widget>
  </widget>

@@ -43,9 +43,9 @@ networkNaster::networkNaster(QWidget *parent)
     m_recvRawDataCache.clear();
 
     //paint
-    //m_paintWidget = new paintWidget;
-    //QObject::connect(this, &networkNaster::s_PaintPoint,
-    //                 m_paintWidget, &paintWidget::on_PaintPoint);
+    m_paintWidget = new paintWidget;
+    QObject::connect(this, &networkNaster::s_PaintPoint,
+                     m_paintWidget, &paintWidget::on_PaintPoint);
 }
 
 networkNaster::~networkNaster()
@@ -246,12 +246,11 @@ void networkNaster::on_ClearBtn_clicked()
 
 void networkNaster::on_paintWidgetBtn_clicked()
 {
-    /*
-    for(unsigned int i = 0; i < m_DataArryNum; i++)
+    unsigned int DataArry[100] = {0};
+    for(unsigned int i = 0; i < 100; i++)
     {
-        m_saveDataArry[i] = (i + 1) % 256;
+        DataArry[i] = i;
     }
     m_paintWidget->show();
-    emit s_PaintPoint(m_saveDataArry);//to paint
-    */
+    emit s_PaintPoint(DataArry);//to paint
 }
