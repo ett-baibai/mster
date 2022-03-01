@@ -82,31 +82,6 @@ void paintWidget::mInitImg()
     m_line->setPen(splinePen);
 }
 
-/*
-void paintWidget::mDrawLine(unsigned int data)
-{
-    static unsigned int axisX = 0;
-    QVector<QPointF> pointData = m_line->pointsVector();
-    int dataCount = pointData.size();
-    if(dataCount < 100)
-    {
-        pointData.append(QPointF(axisX, sin(data) * 10));
-        axisX++;
-    }
-    else
-    {
-        pointData.removeFirst();
-        for(int i = 0; i < dataCount - 1; i++)
-        {
-            pointData[i].rx() -= 1;
-        }
-        pointData.append(QPointF(99, sin(data) * 10));
-    }
-
-    m_line->replace(pointData);
-}
-*/
-
 void paintWidget::on_PaintPoint(unsigned int data)
 {
     m_dataQueue.enqueue(data);
@@ -136,6 +111,4 @@ void paintWidget::on_TimerOutToDraw()
         pointData.append(QPointF(99, sin(m_dataQueue.dequeue()) * 10));
     }
     m_line->replace(pointData);
-
 }
-
