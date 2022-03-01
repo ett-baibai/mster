@@ -62,7 +62,7 @@ void paintWidget::mDrawCoordinateAxes()
     m_chart->addAxis(m_axisX, Qt::AlignBottom);//show axis
 
     //set axis y
-    m_axisY->setRange(-10, 10);
+    m_axisY->setRange(-100, 100);
     m_axisY->setLabelFormat("%d");
     m_axisY->setGridLineVisible(true);
     m_axisY->setTickCount(10);
@@ -82,7 +82,7 @@ void paintWidget::mInitImg()
     m_line->setPen(splinePen);
 }
 
-void paintWidget::on_PaintPoint(unsigned int data)
+void paintWidget::on_PaintPoint(int data)
 {
     m_dataQueue.enqueue(data);
 }
@@ -98,7 +98,7 @@ void paintWidget::on_TimerOutToDraw()
     int dataCount = pointData.size();
     if(dataCount < 100)
     {
-        pointData.append(QPointF(axisX, sin(m_dataQueue.dequeue()) * 10));
+        pointData.append(QPointF(axisX, m_dataQueue.dequeue()));
         axisX++;
     }
     else
@@ -108,7 +108,7 @@ void paintWidget::on_TimerOutToDraw()
         {
             pointData[i].rx() -= 1;
         }
-        pointData.append(QPointF(99, sin(m_dataQueue.dequeue()) * 10));
+        pointData.append(QPointF(99, m_dataQueue.dequeue()));
     }
     m_line->replace(pointData);
 }

@@ -30,7 +30,7 @@ private:
 
     int m_recvDataNum;
     QQueue<unsigned char> m_recvRawDataCache;
-    QQueue<unsigned int> m_recombinedDataQueue;
+    QQueue<int> m_recombinedDataQueue;
     QFile *m_dataFile;
     paintWidget *m_paintWidget;
     QTimer *m_saveDataTimer;
@@ -47,6 +47,6 @@ private slots:
 
 signals:
     void OneClientConnected();
-    void s_PaintPoint(unsigned int data);
+    void s_PaintPoint(int data);
 };
 #endif

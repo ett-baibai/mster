@@ -35,7 +35,7 @@ public:
 
 public slots:
     void on_TimerOutToDraw();
-    void on_PaintPoint(unsigned int data);
+    void on_PaintPoint(int data);
 
 private:
     const int m_constWindowWidth;
@@ -46,7 +46,7 @@ private:
     QValueAxis *m_axisX;
     QValueAxis *m_axisY;
     QTimer *m_addPointTimer;
-    QQueue<unsigned int> m_dataQueue;
+    QQueue<int> m_dataQueue;
 };
 
 #endif // PAINTWIDGET_H

@@ -88,7 +88,7 @@ void networkNaster::on_HandleClientMsg()
         //qDebug()<<"en: "<<(unsigned char)(array[i]);
     }
 
-    unsigned int data = 0, index = 0;
+    int data = 0, index = 0;
     unsigned char bit[4] = {0};
     while(m_recvRawDataCache.length() >= 4)
     {
