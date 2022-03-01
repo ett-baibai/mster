@@ -7,7 +7,7 @@
 #include <QUdpSocket>
 #include <QTimer>
 #include <QQueue>
-//#include "paintWidget.h"
+#include "paintWidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class networkNaster; }
@@ -39,7 +39,7 @@ private:
 
     QQueue<unsigned char> m_recvRawDataCache;
 
-    //paintWidget *m_paintWidget;
+    paintWidget *m_paintWidget;
 
 private slots:
     void on_ConnectBtn_clicked();
@@ -59,7 +59,6 @@ private slots:
 signals:
     void OneClientConnected();
     void s_SubThreadStart(QTcpSocket *tcpSocket);
-    void s_PaintPoint(QQueue<unsigned int> dataQueue);
-
+    void s_PaintPoint(unsigned int data);
 };
 #endif

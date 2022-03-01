@@ -43,9 +43,9 @@ networkNaster::networkNaster(QWidget *parent)
     m_recvRawDataCache.clear();
 
     //paint
-    //m_paintWidget = new paintWidget;
-    //QObject::connect(this, &networkNaster::s_PaintPoint,
-    //                 m_paintWidget, &paintWidget::on_PaintPoint);
+    m_paintWidget = new paintWidget;
+    QObject::connect(this, &networkNaster::s_PaintPoint,
+                     m_paintWidget, &paintWidget::on_PaintPoint);
 }
 
 networkNaster::~networkNaster()
@@ -107,7 +107,7 @@ void networkNaster::on_HandleClientMsg()
     for(int i = 0; i< array.length(); i++)
     {
         m_recvRawDataCache.enqueue((unsigned char)array[i]);
-        qDebug()<<"en: "<<(unsigned char)(array[i]);
+        //qDebug()<<"en: "<<(unsigned char)(array[i]);
     }
 
     int data = 0, index = 0, bit[4] = {0};
@@ -119,18 +119,8 @@ void networkNaster::on_HandleClientMsg()
         }
         data = bit[0] | (bit[1] << 8) | (bit[2] << 16) | (bit[3] << 24);
         qDebug()<<"de: "<< data;
+        emit s_PaintPoint(data);
     }
-
-/*
-
-    if(m_indexDataArry == m_DataArryNum)
-    {
-        m_indexDataArry++;
-        m_paintWidget->show();
-        emit s_PaintPoint(m_saveDataArry);//to paint
-    }
-    */
-    //ui->MessageList->addItem(array);
 }
 
 void networkNaster::on_ShowClientMsgFromOtherThread(QByteArray array)
@@ -247,11 +237,12 @@ void networkNaster::on_ClearBtn_clicked()
 void networkNaster::on_paintWidgetBtn_clicked()
 {
     /*
-    for(unsigned int i = 0; i < m_DataArryNum; i++)
-    {
-        m_saveDataArry[i] = (i + 1) % 256;
-    }
     m_paintWidget->show();
-    emit s_PaintPoint(m_saveDataArry);//to paint
+
+    for(int i = 0; i < 1000; i++)
+    {
+        qDebug()<<i;
+        emit s_PaintPoint(i);
+    }
     */
 }

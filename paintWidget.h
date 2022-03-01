@@ -3,9 +3,24 @@
 
 #include <QWidget>
 #include <QtGui>
-#include <QPaintEvent>
-#include <QMainWindow>
+#include <QtCharts/QChart>
+#include <QtCharts\QChartView>
+#include <QPointF>
+#include <QList>
 #include <QTimer>
+#include <QWidget>
+#include <QGraphicsItem>
+#include <QSplineSeries>
+#include <QValueAxis>
+#include <QQueue>
+
+//just include double classes, not head file
+QT_CHARTS_BEGIN_NAMESPACE
+class QSplineSeries;
+class QValueAxis;
+QT_CHARTS_END_NAMESPACE
+
+QT_CHARTS_USE_NAMESPACE   //need include this code for using chart
 
 class paintWidget : public QWidget
 {
@@ -16,39 +31,22 @@ public:
 
     void mSetCanvas();
     void mDrawCoordinateAxes();
-    void mSetAxisSpace();
-    void mResetAxis(double xMin, double xMax, double yMin, double yMax);
-    void mDrawPoint(double x, double y);
+    void mInitImg();
 
 public slots:
-    void onRefresh();
-    void on_PaintPoint(unsigned int array[2048]);
-
-protected:
-     void paintEvent(QPaintEvent *);
-
+    void on_TimerOutToDraw();
+    void on_PaintPoint(unsigned int data);
 
 private:
-    QImage m_image;
-    QPainter *m_painter;
-
-    int m_startX;
-    int m_startY;
-    int m_chartWidth;
-    int m_chartHeight;
-
-    double m_xMin;
-    double m_xMax;
-    double m_yMin;
-    double m_yMax;
-    double m_kx;
-    double m_ky;
-
-    const int m_constXAxisPointNum;
-    const int m_constYAxisPointNum;
     const int m_constWindowWidth;
     const int m_constWindowHeight;
-
+    QChart * m_chart;
+    QChartView *m_chartView;
+    QSplineSeries *m_line; //smooth curve
+    QValueAxis *m_axisX;
+    QValueAxis *m_axisY;
+    QTimer *m_addPointTimer;
+    QQueue<unsigned int> m_dataQueue;
 };
 
 #endif // PAINTWIDGET_H

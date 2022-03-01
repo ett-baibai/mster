@@ -1,145 +1,114 @@
 #include "paintWidget.h"
+#include <complex>
 
 paintWidget::paintWidget(QWidget *parent) : QWidget(parent),
-    m_constXAxisPointNum(50),
-    m_constYAxisPointNum(20),
     m_constWindowWidth(1900),
     m_constWindowHeight(1000)
 {
     this->setWindowTitle("paint");
-    m_startX = 100;
-    m_startY = m_constWindowHeight - 100;
 
-    //the width and height of axis
-    m_chartWidth = m_constWindowWidth - m_startX - 50;
-    m_chartHeight = m_constWindowHeight - m_startX - 50;
+    m_chart = new QChart();
+    m_chartView = new QChartView(m_chart,this);
+    m_line = new QSplineSeries;
+    m_axisX = new QValueAxis;
+    m_axisY = new QValueAxis;
+    m_dataQueue.clear();
 
-    m_xMin = 0.0;
-    m_xMax = 0.0;
-    m_yMin = 0.0;
-    m_yMax = 0.0;
-    m_kx = 0.0;
-    m_ky = 0.0;
+    mSetCanvas();
+    mDrawCoordinateAxes();
+    mInitImg();
+
+    m_addPointTimer = new QTimer;
+    QObject::connect(m_addPointTimer, SIGNAL(timeout()), this, SLOT(on_TimerOutToDraw()));
+    m_addPointTimer->start(1);
 }
 
 paintWidget::~paintWidget()
 {
-    delete m_painter;
+    if(m_addPointTimer->isActive())
+        m_addPointTimer->stop();
+    delete m_addPointTimer;
+
+    delete m_line;
+    delete m_axisX;
+    delete m_axisY;
+    delete m_chart;
+    delete m_chartView;
 }
 
 void paintWidget::mSetCanvas()
 {
     resize(m_constWindowWidth, m_constWindowHeight); //reset window
-    m_image = QImage(m_constWindowWidth, m_constWindowHeight, QImage::Format_RGB32);
-    QColor backColor = qRgb(255, 255, 255);
-    m_image.fill(backColor);
+    move(3, 3);
 
-    m_painter = new QPainter(&m_image);
-    m_painter->setRenderHint(QPainter::Antialiasing, true);
+    m_chart = m_chartView->chart();//m_chart: pen
+    //m_chartView->setRubberBand(QChartView::NoRubberBand);
+    m_chartView->setRenderHint(QPainter::Antialiasing);
+    m_chartView->resize(m_constWindowWidth - 10, m_constWindowHeight - 10);
+    m_chartView->setContentsMargins(0,0,0,0);
+    m_chart->legend()->hide();
+    m_chartView->show();
 }
 
 void paintWidget::mDrawCoordinateAxes()
 {
-    // x,y axis
-    QPointF xStartPoint(m_startX, m_startY);
-    QPointF xEndPoint(m_chartWidth + m_startX, m_startY);
-    m_painter->drawLine(xStartPoint, xEndPoint);
-    m_painter->drawText(m_startX + m_chartWidth + 10, m_startY + 35, QString("index"));
+    //set axis x
+    m_axisX->setRange(0, 100);
+    m_axisX->setLabelFormat("%d"); //format of value of axis x
+    m_axisX->setGridLineVisible(true);
+    m_axisX->setTickCount(10);   //main scale
+    m_axisX->setMinorTickCount(5);//mini scale
+    m_axisX->setTitleText("t");//title
+    m_chart->addAxis(m_axisX, Qt::AlignBottom);//show axis
 
-    QPointF yStartPoint(m_startX, m_startY - m_chartHeight);
-    QPointF yEndPoint(m_startX, m_startY);
-    m_painter->drawLine(yStartPoint, yEndPoint);
-    m_painter->drawText(m_startX - 45, m_startY - m_chartHeight - 20, QString("value"));
+    //set axis y
+    m_axisY->setRange(-10, 10);
+    m_axisY->setLabelFormat("%d");
+    m_axisY->setGridLineVisible(true);
+    m_axisY->setTickCount(10);
+    //m_axisY->setMinorTickCount(5);
+    m_axisY->setTitleText("v");
+    m_chart->addAxis(m_axisY, Qt::AlignLeft);
+}
 
-    //painting grand
-    QPen penDotLine;
-    penDotLine.setStyle(Qt::DotLine);
-    m_painter->setPen(penDotLine);
-    for (int i = 0; i < m_constYAxisPointNum; ++i)
+void paintWidget::mInitImg()
+{
+    m_chart->addSeries(m_line);//set line to chart
+    m_line->attachAxis(m_axisX);//bind datas with axis, this code must be next to "addSeries"
+    m_line->attachAxis(m_axisY);
+    QPen splinePen;
+    splinePen.setColor(Qt::red);
+    splinePen.setWidth(2);
+    m_line->setPen(splinePen);
+}
+
+void paintWidget::on_PaintPoint(unsigned int data)
+{
+    m_dataQueue.enqueue(data);
+}
+
+void paintWidget::on_TimerOutToDraw()
+{
+    int queueSize = m_dataQueue.size();
+    if(queueSize == 0)return;
+
+    static unsigned int axisX = 0;
+    QVector<QPointF> pointData;
+    pointData = m_line->pointsVector();
+    int dataCount = pointData.size();
+    if(dataCount < 100)
     {
-        //perpendicular
-        m_painter->drawLine(m_startX + (i+1)* m_chartWidth/m_constYAxisPointNum, m_startY,
-                         m_startX + (i+1)* m_chartWidth/m_constYAxisPointNum, m_startY - m_chartHeight);
+        pointData.append(QPointF(axisX, sin(m_dataQueue.dequeue()) * 10));
+        axisX++;
     }
-    for (int i = 0; i < m_constXAxisPointNum; ++i)
+    else
     {
-        //horizontal
-        m_painter->drawLine(m_startX, m_startY-(i+1)*m_chartHeight/m_constXAxisPointNum,
-                         m_startX + m_chartWidth, m_startY-(i+1)*m_chartHeight/m_constXAxisPointNum);
+        pointData.removeFirst();
+        for(int i = 0; i < dataCount - 1; i++)
+        {
+            pointData[i].rx() -= 1;
+        }
+        pointData.append(QPointF(99, sin(m_dataQueue.dequeue()) * 10));
     }
-}
-
-void paintWidget::mSetAxisSpace()
-{
-    //painting scale of x axis
-    m_painter->drawText(m_startX + 3, m_startY + 12, QString::number(0));//the first scale
-    for (int i = 0; i < m_constXAxisPointNum - 1; ++i)
-    {
-        m_painter->drawText(m_startX + (i+0.9) * m_chartWidth / m_constXAxisPointNum, m_startY + 12,
-                         QString::number((int)(m_xMin + (i+1) * ((m_xMax-m_xMin)/m_constXAxisPointNum))));
-    }
-    m_painter->drawText(m_startX + (m_constXAxisPointNum - 1 + 0.8) * m_chartWidth / m_constXAxisPointNum, m_startY + 12,
-                        QString::number(m_xMax));//the last scale
-
-    //painting scale of x axis
-    m_painter->drawText(m_startX - 45, m_startY - 3, QString::number(m_yMin));//the first scale
-    for (int i = 0; i < m_constYAxisPointNum - 1; ++i)
-    {
-        m_painter->drawText(m_startX - 45, m_startY - (i+0.85) * m_chartHeight/m_constYAxisPointNum,
-                         QString::number(m_yMin + (i+1) * ((m_yMax-m_yMin)/m_constYAxisPointNum)));
-    }
-    m_painter->drawText(m_startX - 45, m_startY - (m_constYAxisPointNum - 1 + 0.85) * m_chartHeight/m_constYAxisPointNum,
-                     QString::number(m_yMax));//the last scale
-}
-
-void paintWidget::mResetAxis(double xMin, double xMax, double yMin, double yMax)
-{
-    //onRefresh();
-    m_xMin = xMin;
-    m_xMax = xMax;
-    m_yMin = yMin;
-    m_yMax = yMax;
-
-    mSetAxisSpace();
-
-    m_kx = (double)(m_chartWidth / (xMax-xMin)); // scale factor of x axis
-    m_ky = (double)(m_chartHeight / (yMax-yMin));  // scale factor of y axis
-}
-
-void paintWidget::mDrawPoint(double x, double y)
-{
-    QPen penPoint;
-    penPoint.setColor(Qt::red);
-    penPoint.setWidth(3);
-
-    double dXStart = m_startX + m_kx * (x - m_xMin);
-    m_painter->setPen(penPoint);
-    m_painter->drawPoint(dXStart, m_startY - (y - m_yMin) * m_ky);
-}
-
-void paintWidget::onRefresh()
-{
-    m_painter->fillRect(0, 0, m_constWindowWidth, m_constWindowHeight, Qt::white);
-    mSetCanvas();
-    mDrawCoordinateAxes();
-    mResetAxis(m_xMin, m_xMax, m_yMin, m_yMax);
-    update();
-}
-
-void paintWidget::paintEvent(QPaintEvent *)
-{
-    QPainter painter(this);
-    painter.drawImage(0, 0, m_image);
-}
-
-void paintWidget::on_PaintPoint(unsigned int array[2048])
-{
-    mSetCanvas();
-    mDrawCoordinateAxes();
-    mResetAxis(0, 2048, 0, 255);
-
-    for(int i = 0; i <= 2048; i++)
-    {
-        mDrawPoint(i + 1,array[i]);
-    }
+    m_line->replace(pointData);
 }

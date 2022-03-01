@@ -12,10 +12,12 @@ CONFIG += c++11
 
 SOURCES += \
     main.cpp \
-    networkmaster.cpp
+    networkmaster.cpp \
+    paintWidget.cpp
 
 HEADERS += \
-    networkmaster.h
+    networkmaster.h \
+    paintWidget.h
 
 FORMS += \
     networkmaster.ui
