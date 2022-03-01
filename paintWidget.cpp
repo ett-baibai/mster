@@ -20,7 +20,7 @@ paintWidget::paintWidget(QWidget *parent) : QWidget(parent),
 
     m_addPointTimer = new QTimer;
     QObject::connect(m_addPointTimer, SIGNAL(timeout()), this, SLOT(on_TimerOutToDraw()));
-    m_addPointTimer->start(1);
+    m_addPointTimer->start(2);
 }
 
 paintWidget::~paintWidget()

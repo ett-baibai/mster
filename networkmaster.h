@@ -7,6 +7,8 @@
 #include <QUdpSocket>
 #include <QTimer>
 #include <QQueue>
+#include <QStringList>
+#include <QFile>
 #include "paintWidget.h"
 
 QT_BEGIN_NAMESPACE
@@ -19,46 +21,32 @@ class networkNaster : public QDialog
 public:
     networkNaster(QWidget *parent = nullptr);
     ~networkNaster();
-    void UdpSendMsg();
 
 private:
     Ui::networkNaster *ui;
     QTcpServer *m_pTcpServer;
     QTcpSocket *m_pTcpSocket;
-    QUdpSocket *m_pUdpSocket;
-
-    QTimer *m_TcpTimer;
-    bool m_isTcpTimerBtnClicked;
-    unsigned char m_tcpSendIndex;
-
-    QTimer *m_UdpTimer;
-    bool m_isUdpTimerBtnClicked;
-
     const unsigned short m_tcpPort;
-    const unsigned short m_udpPort;
 
+    int m_recvDataNum;
     QQueue<unsigned char> m_recvRawDataCache;
-
+    QQueue<unsigned int> m_recombinedDataQueue;
+    QFile *m_dataFile;
     paintWidget *m_paintWidget;
+    QTimer *m_saveDataTimer;
+
+    void m_CreateCsvFile();
 
 private slots:
-    void on_ConnectBtn_clicked();
-    void on_TcpSendOnceBtn_clicked();
     void on_OneClientListend();
     void on_OneClientDisconnect();
-    void on_ShowClientMsgFromOtherThread(QByteArray array);
     void on_HandleClientMsg();
-    void on_UdpSendOnceBtn_clicked();
-    void on_UdpAutoSendBtn_clicked();
+    void on_TimerOutToSaveData();
     void on_ClearBtn_clicked();
-    void on_TimerOutToAutoSendTcpMsg();
-    void on_TimerOutToAutoSendUdpMsg();
-    void on_TcpAutoSendBtn_clicked();
     void on_paintWidgetBtn_clicked();
 
 signals:
     void OneClientConnected();
-    void s_SubThreadStart(QTcpSocket *tcpSocket);
     void s_PaintPoint(unsigned int data);
 };
 #endif
