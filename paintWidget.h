@@ -11,6 +11,8 @@
 #include <QWidget>
 #include <QGraphicsItem>
 #include <QSplineSeries>
+#include <QLineSeries>
+#include <QScatterSeries>
 #include <QValueAxis>
 #include <QQueue>
 
@@ -42,11 +44,17 @@ private:
     const int m_constWindowHeight;
     QChart * m_chart;
     QChartView *m_chartView;
-    QSplineSeries *m_line; //smooth curve
+    QSplineSeries *m_smoothCurve;
+    QLineSeries *m_brokenLine;
+    QScatterSeries *m_pointDiagram;
+    QList<QXYSeries*> m_lineList;
     QValueAxis *m_axisX;
     QValueAxis *m_axisY;
+    int  m_minAxisX;
+    int  m_maxAxisX;
+    unsigned int m_axisXIndex = 0;
     QTimer *m_addPointTimer;
-    QQueue<int> m_dataQueue;
+    QQueue<double> m_dataQueue;
 };
 
 #endif // PAINTWIDGET_H

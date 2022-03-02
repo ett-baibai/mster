@@ -56,7 +56,7 @@ void networkNaster::on_OneClientListend()
     QObject::connect(m_pTcpSocket,&QTcpSocket::disconnected, this, &networkNaster::on_OneClientDisconnect);
     QObject::connect(m_pTcpSocket,&QTcpSocket::readyRead, this, &networkNaster::on_HandleClientMsg);
     m_CreateCsvFile();
-    m_saveDataTimer->start(100);
+    //m_saveDataTimer->start(100);
     m_paintWidget->show();
 }
 
@@ -65,7 +65,7 @@ void networkNaster::m_CreateCsvFile()
     if(!m_dataFile->open(QIODevice::WriteOnly | QIODevice::Text))
     {
         QMessageBox::information(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("csv文件创建失败，数据无法保存，可能是文件被其他程序占用"));
-        m_saveDataTimer->stop();
+        //m_saveDataTimer->stop();
     }
     else
         m_dataFile->close();
@@ -77,6 +77,7 @@ void networkNaster::on_OneClientDisconnect()
     ui->MessageList->addItem("client " + hostAddress + " disconnected");
     m_pTcpSocket->close();
     m_saveDataTimer->stop();
+    //m_paintWidget->hide();
 }
 
 void networkNaster::on_HandleClientMsg()
@@ -98,11 +99,10 @@ void networkNaster::on_HandleClientMsg()
         }
         data = bit[0] | (bit[1] << 8) | (bit[2] << 16) | (bit[3] << 24);
         m_recombinedDataQueue.enqueue(data);
-        qDebug()<<"de: "<< data;
-        if(m_recvDataNum >= 2)
+        //qDebug()<<"de: "<< data;
+        if(m_recvDataNum >= 100)
         {
             m_recvDataNum = 1;
-            qDebug()<<"show: "<< data;
             emit s_PaintPoint(data);
         }
         else
@@ -133,12 +133,15 @@ void networkNaster::on_ClearBtn_clicked()
 
 void networkNaster::on_paintWidgetBtn_clicked()
 {
-    //m_paintWidget->show();
-/*
-    for(int i = 0; i < 1000; i++)
+    m_paintWidget->show();
+
+    for(int i = 0; i < 10; i++)
     {
-        qDebug()<<i;
-        emit s_PaintPoint(i);
+        for(int j = 0; j < 50; j++)
+        {
+            qDebug()<<j;
+            emit s_PaintPoint(j);
+        }
     }
-*/
+
 }
