@@ -30,7 +30,6 @@ networkNaster::networkNaster(QWidget *parent)
     m_saveDataTimer = new QTimer;
     QObject::connect(m_saveDataTimer, SIGNAL(timeout()), this, SLOT(on_TimerOutToSaveData()));
 
-
     //paint
     m_paintWidget = new paintWidget;
     QObject::connect(this, &networkNaster::s_PaintPoint, m_paintWidget, &paintWidget::on_PaintPoint);
@@ -89,18 +88,18 @@ void networkNaster::on_HandleClientMsg()
         //qDebug()<<"en: "<<(unsigned char)(array[i]);
     }
 
-    int data = 0, index = 0;
+    unsigned int data = 0, index = 0;
     unsigned char bit[4] = {0};
     while(m_recvRawDataCache.length() >= 4)
     {
-        for(index = 0, data = 0; index < 4; index++)
+        for(index = 0; index < 4; index++)
         {
             bit[index] = m_recvRawDataCache.dequeue();
         }
         data = bit[0] | (bit[1] << 8) | (bit[2] << 16) | (bit[3] << 24);
-        m_recombinedDataQueue.enqueue(data);
+        //m_recombinedDataQueue.enqueue(data);
         //qDebug()<<"de: "<< data;
-        if(m_recvDataNum >= 100)
+        if(m_recvDataNum >= 1)
         {
             m_recvDataNum = 1;
             emit s_PaintPoint(data);
@@ -134,13 +133,26 @@ void networkNaster::on_ClearBtn_clicked()
 void networkNaster::on_paintWidgetBtn_clicked()
 {
     m_paintWidget->show();
-
-    for(int i = 0; i < 10; i++)
+    unsigned int num[201] = {0};
+    for(unsigned int i = 0, j = 8388708; i < 100; i++)
     {
-        for(int j = 0; j < 50; j++)
+        num[i] = j;
+        j--;
+    }
+
+    for(unsigned int i = 100; i < 201; i++)
+    {
+        num[i] = i - 100;
+    }
+
+    unsigned int data = 0;
+    for(unsigned int i = 0; i < 201; i++)
+    {
+        for(unsigned int ch = 0; ch < 3; ch++)
         {
-            qDebug()<<j;
-            emit s_PaintPoint(j);
+            data = (ch << 24) | num[i];
+            //qDebug()<<"1: "<< ch;
+            emit s_PaintPoint(data);
         }
     }
 

@@ -10,9 +10,9 @@
 #include <QTimer>
 #include <QWidget>
 #include <QGraphicsItem>
-#include <QSplineSeries>
+//#include <QSplineSeries>
 #include <QLineSeries>
-#include <QScatterSeries>
+//#include <QScatterSeries>
 #include <QValueAxis>
 #include <QQueue>
 
@@ -37,24 +37,23 @@ public:
 
 public slots:
     void on_TimerOutToDraw();
-    void on_PaintPoint(int data);
+    void on_PaintPoint(unsigned int data);
 
 private:
     const int m_constWindowWidth;
     const int m_constWindowHeight;
-    QChart * m_chart;
-    QChartView *m_chartView;
-    QSplineSeries *m_smoothCurve;
-    QLineSeries *m_brokenLine;
-    QScatterSeries *m_pointDiagram;
-    QList<QXYSeries*> m_lineList;
-    QValueAxis *m_axisX;
-    QValueAxis *m_axisY;
-    int  m_minAxisX;
-    int  m_maxAxisX;
-    unsigned int m_axisXIndex = 0;
+    static const int m_sk_maxChannleNum = 4;
+    static const int m_sk_channleNum = 3;
+    QChart * m_chart[m_sk_channleNum];
+    QChartView *m_chartView[m_sk_channleNum];
+    QLineSeries *m_cruveChannel[m_sk_channleNum];
+    QValueAxis *m_axisX[m_sk_channleNum];
+    QValueAxis *m_axisY[m_sk_channleNum];
+    int  m_minAxisX[m_sk_channleNum];
+    int  m_maxAxisX[m_sk_channleNum];
+    unsigned int m_axisXIndex[m_sk_channleNum];
     QTimer *m_addPointTimer;
-    QQueue<double> m_dataQueue;
+    QQueue<double> m_dataQueue[m_sk_channleNum];
 };
 
 #endif // PAINTWIDGET_H
