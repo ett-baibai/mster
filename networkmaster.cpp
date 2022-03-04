@@ -99,7 +99,7 @@ void networkNaster::on_HandleClientMsg()
         data = bit[0] | (bit[1] << 8) | (bit[2] << 16) | (bit[3] << 24);
         //m_recombinedDataQueue.enqueue(data);
         //qDebug()<<"de: "<< data;
-        if(m_recvDataNum >= 1)
+        if(m_recvDataNum >= 40)
         {
             m_recvDataNum = 1;
             emit s_PaintPoint(data);

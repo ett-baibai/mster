@@ -112,24 +112,15 @@ void paintWidget::mInitImg()
 
 void paintWidget::on_PaintPoint(unsigned int data)
 {
-    qDebug()<< "data:" << data;
+    //qDebug()<< "data:" << data;
     unsigned int ch = (0x03000000 & data) >> 24;
     unsigned int realData = 0x00FFFFFF & data;
-    int finalData = 0;
     if(realData & 0x800000)//extend 24-bit signed negative number to 32-bit signed number
     {
-        //qDebug()<< "negative";
-        realData &= 0x7FFFFF;
-        //finalData = (int)realData;
-        //finalData = realData + 0xFF000000;
-        finalData = -(int)realData;
+        realData += 0xFF000000;
     }
-    else
-    {
-        finalData =(int)realData;
-    }
-    qDebug()<< "ch:" << ch << "finalData:" << finalData;
-    m_dataQueue[ch].enqueue(finalData * 250 / 4194303);//100 times of the real voltage
+    //qDebug()<< "ch:" << ch << "finalData:" << (int)realData;
+    m_dataQueue[ch].enqueue((int)realData * 250 / 4194303);//100 times of the real voltage
 }
 
 void paintWidget::on_TimerOutToDraw()
@@ -155,25 +146,4 @@ void paintWidget::on_TimerOutToDraw()
         m_axisXIndex[i]++;
         m_cruveChannel[i]->replace(pointData[i]);
     }
-/*
-    static unsigned int axisX = 0;
-    QVector<QPointF> pointData;
-    pointData = m_lineList[0]->pointsVector();
-    int dataCount = pointData.size();
-    if(dataCount < m_maxAxisX)
-    {
-        pointData.append(QPointF(axisX, m_dataQueue.dequeue()));
-        axisX++;
-    }
-    else
-    {
-        pointData.removeFirst();
-        for(int i = 0; i < dataCount - 1; i++)
-        {
-            pointData[i].rx() -= 1;
-        }
-        pointData.append(QPointF(m_maxAxisX - 1, m_dataQueue.dequeue()));
-    }
-    m_lineList[0]->replace(pointData);
-    */
 }
