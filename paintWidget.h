@@ -10,7 +10,9 @@
 #include <QTimer>
 #include <QWidget>
 #include <QGraphicsItem>
-#include <QSplineSeries>
+//#include <QSplineSeries>
+#include <QLineSeries>
+//#include <QScatterSeries>
 #include <QValueAxis>
 #include <QQueue>
 
@@ -40,13 +42,18 @@ public slots:
 private:
     const int m_constWindowWidth;
     const int m_constWindowHeight;
-    QChart * m_chart;
-    QChartView *m_chartView;
-    QSplineSeries *m_line; //smooth curve
-    QValueAxis *m_axisX;
-    QValueAxis *m_axisY;
+    static const int m_sk_maxChannleNum = 4;
+    static const int m_sk_channleNum = 3;
+    QChart * m_chart[m_sk_channleNum];
+    QChartView *m_chartView[m_sk_channleNum];
+    QLineSeries *m_cruveChannel[m_sk_channleNum];
+    QValueAxis *m_axisX[m_sk_channleNum];
+    QValueAxis *m_axisY[m_sk_channleNum];
+    int  m_minAxisX[m_sk_channleNum];
+    int  m_maxAxisX[m_sk_channleNum];
+    unsigned int m_axisXIndex[m_sk_channleNum];
     QTimer *m_addPointTimer;
-    QQueue<unsigned int> m_dataQueue;
+    QQueue<double> m_dataQueue[m_sk_channleNum];
 };
 
 #endif // PAINTWIDGET_H

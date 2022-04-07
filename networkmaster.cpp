@@ -9,53 +9,39 @@
 #define mydebug qDebug()<< QDateTime::currentDateTime().toString("hh:mm:ss")<< ":"
 
 networkNaster::networkNaster(QWidget *parent)
-    : QDialog(parent), ui(new Ui::networkNaster), m_tcpPort(6666), m_udpPort(8888)
+    : QDialog(parent), ui(new Ui::networkNaster), m_tcpPort(6666)
 {
     ui->setupUi(this);
-    ui->ConnectBtn->setEnabled(false);
-    ui->UdpSendOnceBtn->setEnabled(false);
-    ui->UdpAutoSendBtn->setEnabled(false);
-    //mydebug << "main thread address: " << QThread::currentThread();
 
     m_pTcpServer = NULL;
     m_pTcpSocket = NULL;
-    m_pUdpSocket = new QUdpSocket;
-
     m_pTcpServer = new QTcpServer(this);
-    m_pTcpServer->listen(QHostAddress::Any,m_tcpPort);
+    m_pTcpServer->listen(QHostAddress::Any, m_tcpPort);
 
     //catch new connecting require
-    QObject::connect(m_pTcpServer,&QTcpServer::newConnection,
-                     this, &networkNaster::on_OneClientListend);
+    QObject::connect(m_pTcpServer,&QTcpServer::newConnection, this, &networkNaster::on_OneClientListend);
 
-
-    m_TcpTimer = new QTimer;
-    QObject::connect(m_TcpTimer, SIGNAL(timeout()),
-            this, SLOT(on_TimerOutToAutoSendTcpMsg()));
-    m_isTcpTimerBtnClicked = false;
-    m_tcpSendIndex = 1;
-
-    m_UdpTimer = new QTimer;
-    QObject::connect(m_UdpTimer, SIGNAL(timeout()),
-            this, SLOT(on_TimerOutToAutoSendUdpMsg()));
-    m_isUdpTimerBtnClicked = false;
-
+    m_recvDataNum = 1;
     m_recvRawDataCache.clear();
+    m_recombinedDataQueue.clear();
+
+    //save data
+    m_dataFile = new QFile("data.csv");
+    m_saveDataTimer = new QTimer;
+    QObject::connect(m_saveDataTimer, SIGNAL(timeout()), this, SLOT(on_TimerOutToSaveData()));
 
     //paint
     m_paintWidget = new paintWidget;
-    QObject::connect(this, &networkNaster::s_PaintPoint,
-                     m_paintWidget, &paintWidget::on_PaintPoint);
+    QObject::connect(this, &networkNaster::s_PaintPoint, m_paintWidget, &paintWidget::on_PaintPoint);
 }
 
 networkNaster::~networkNaster()
 {
-    delete this->m_pTcpSocket;
-    delete this->m_pUdpSocket;
-    delete this->m_pTcpServer;
-    delete this->m_TcpTimer;
-    delete this->m_UdpTimer;
-    //delete m_paintWidget;
+    if(m_saveDataTimer->isActive())m_saveDataTimer->stop();
+    delete m_saveDataTimer;
+    delete m_pTcpServer;
+    delete m_dataFile;
+    delete m_paintWidget;
     delete ui;
 }
 
@@ -65,24 +51,23 @@ void networkNaster::on_OneClientListend()
     ui->MessageList->addItem(m_pTcpSocket->peerAddress().toString() + " " +
                              QString::number(m_pTcpSocket->peerPort()) + " connected, socket: " +
                              QString::number(m_pTcpServer->socketDescriptor()));
-    QObject::connect(m_pTcpSocket,&QTcpSocket::disconnected,
-                     this, &networkNaster::on_OneClientDisconnect);
 
-    QObject::connect(m_pTcpSocket,&QTcpSocket::readyRead,
-            this, &networkNaster::on_HandleClientMsg);
-    /*
-    QThread *subThread = new QThread;
-    MultiThread *taskThread = new MultiThread;
-    taskThread->moveToThread(subThread);
-    connect(this,&networkNaster::s_SubThreadStart,
-            taskThread, &MultiThread::on_RecvData);
+    QObject::connect(m_pTcpSocket,&QTcpSocket::disconnected, this, &networkNaster::on_OneClientDisconnect);
+    QObject::connect(m_pTcpSocket,&QTcpSocket::readyRead, this, &networkNaster::on_HandleClientMsg);
+    m_CreateCsvFile();
+    //m_saveDataTimer->start(100);
+    m_paintWidget->show();
+}
 
-    emit s_SubThreadStart(m_pTcpSocket);
-    subThread->start();
-
-    QObject::connect(taskThread, &MultiThread::s_sendMsg,
-                     this, &networkNaster::on_ShowClientMsg);
-                     */
+void networkNaster::m_CreateCsvFile()
+{
+    if(!m_dataFile->open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QMessageBox::information(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("csv文件创建失败，数据无法保存，可能是文件被其他程序占用"));
+        //m_saveDataTimer->stop();
+    }
+    else
+        m_dataFile->close();
 }
 
 void networkNaster::on_OneClientDisconnect()
@@ -90,15 +75,8 @@ void networkNaster::on_OneClientDisconnect()
     QString hostAddress=m_pTcpSocket->QAbstractSocket::peerAddress().toString();
     ui->MessageList->addItem("client " + hostAddress + " disconnected");
     m_pTcpSocket->close();
-    m_pUdpSocket->close();
-
-    if(ui->TcpAutoSendBtn->text() == "transfering")
-    {
-        mydebug<<("close tcp timer");
-        ui->TcpAutoSendBtn->setText("TcpAutoSend");
-        m_TcpTimer->stop();
-        m_isTcpTimerBtnClicked = false;
-    }
+    m_saveDataTimer->stop();
+    //m_paintWidget->hide();
 }
 
 void networkNaster::on_HandleClientMsg()
@@ -110,123 +88,41 @@ void networkNaster::on_HandleClientMsg()
         //qDebug()<<"en: "<<(unsigned char)(array[i]);
     }
 
-    int data = 0, index = 0, bit[4] = {0};
+    unsigned int data = 0, index = 0;
+    unsigned char bit[4] = {0};
     while(m_recvRawDataCache.length() >= 4)
     {
-        for(index = 0, data = 0; index < 4; index++)
+        for(index = 0; index < 4; index++)
         {
             bit[index] = m_recvRawDataCache.dequeue();
         }
         data = bit[0] | (bit[1] << 8) | (bit[2] << 16) | (bit[3] << 24);
-        qDebug()<<"de: "<< data;
-        emit s_PaintPoint(data);
-    }
-}
-
-void networkNaster::on_ShowClientMsgFromOtherThread(QByteArray array)
-{
-    ui->MessageList->addItem(array);
-}
-
-void networkNaster::on_ConnectBtn_clicked()
-{
-    QMessageBox::information(this, "title", "wiating for adding code");
-}
-
-void networkNaster::on_TcpSendOnceBtn_clicked()
-{
-    if(NULL == m_pTcpSocket)
-    {
-        QMessageBox::information(this, "err", "no tcp connection");
-        return;
-    }
-    QString str = ui->SendMsgEdit->toPlainText();
-    qint64 WriteResult = m_pTcpSocket->write(str.toUtf8().data());
-
-    bool bFlush = m_pTcpSocket->flush();
-
-    if(WriteResult != -1 && bFlush == 1)//judge send succeedly or not
-    {
-        if(WriteResult == 0)
-            QMessageBox::information(this,"error",tr("WriteResult = 0"));
+        //m_recombinedDataQueue.enqueue(data);
+        //qDebug()<<"de: "<< data;
+        if(m_recvDataNum >= 40)
+        {
+            m_recvDataNum = 1;
+            emit s_PaintPoint(data);
+        }
         else
         {
+            m_recvDataNum++;
         }
     }
-    else
-        qDebug()<<"failed to write!";
 }
 
-void networkNaster::on_TcpAutoSendBtn_clicked()
+void networkNaster::on_TimerOutToSaveData()
 {
-    if(false == m_isTcpTimerBtnClicked)
+    char ch[20] = "";
+    if (m_dataFile->open(QIODevice::Append))
     {
-        if(NULL == m_pTcpSocket)
+        while(!m_recombinedDataQueue.isEmpty())
         {
-            QMessageBox::information(this, "err", "no tcp connection");
-            return;
+            sprintf(ch, "%d\n", m_recombinedDataQueue.dequeue());
+            m_dataFile->write(ch);
         }
-        mydebug<<("start tcp timer");
-        ui->TcpAutoSendBtn->setText("transfering");
-        m_TcpTimer->start(1000);
-        m_isTcpTimerBtnClicked = true;
+        m_dataFile->close();
     }
-
-    else
-    {
-        mydebug<<("close tcp timer");
-        ui->TcpAutoSendBtn->setText("TcpAutoSend");
-        m_TcpTimer->stop();
-        m_isTcpTimerBtnClicked = false;
-    }
-}
-
-void networkNaster::on_TimerOutToAutoSendTcpMsg()
-{
-    char dataStr[8] = {0};
-    snprintf(dataStr, 8, "%d#", m_tcpSendIndex);
-    m_pTcpSocket->write(dataStr);
-    //qDebug()<<"send"<<dataStr;
-    if(m_tcpSendIndex < 5)m_tcpSendIndex++;
-    else m_tcpSendIndex = 1;
-}
-
-void networkNaster::on_UdpSendOnceBtn_clicked()
-{
-    mydebug<<"mannual send udp data once";
-    UdpSendMsg();
-}
-
-void networkNaster::on_UdpAutoSendBtn_clicked()
-{
-    if(false == m_isUdpTimerBtnClicked)
-    {
-        mydebug<<("start udp timer");
-        ui->UdpAutoSendBtn->setText("transfering");
-        m_UdpTimer->start(2000);
-        m_isUdpTimerBtnClicked = true;
-    }
-
-    else
-    {
-        mydebug<<("close udp timer");
-        ui->UdpAutoSendBtn->setText("UdpAutoSend");
-        m_UdpTimer->stop();
-        m_isUdpTimerBtnClicked = false;
-    }
-}
-
-void networkNaster::on_TimerOutToAutoSendUdpMsg()
-{
-    mydebug<<"atuo send udp data once";
-    UdpSendMsg();
-}
-
-void networkNaster::UdpSendMsg()
-{
-    //QString time = QDateTime::currentDateTime().toString("hh:mm:ss");
-
-    //m_pUdpSocket->writeDatagram(m_arr,QHostAddress("127.0.0.1"), m_udpPort);
 }
 
 void networkNaster::on_ClearBtn_clicked()
@@ -236,13 +132,28 @@ void networkNaster::on_ClearBtn_clicked()
 
 void networkNaster::on_paintWidgetBtn_clicked()
 {
-    /*
     m_paintWidget->show();
-
-    for(int i = 0; i < 1000; i++)
+    unsigned int num[201] = {0};
+    for(unsigned int i = 0, j = 8388708; i < 100; i++)
     {
-        qDebug()<<i;
-        emit s_PaintPoint(i);
+        num[i] = j;
+        j--;
     }
-    */
+
+    for(unsigned int i = 100; i < 201; i++)
+    {
+        num[i] = i - 100;
+    }
+
+    unsigned int data = 0;
+    for(unsigned int i = 0; i < 201; i++)
+    {
+        for(unsigned int ch = 0; ch < 3; ch++)
+        {
+            data = (ch << 24) | num[i];
+            //qDebug()<<"1: "<< ch;
+            emit s_PaintPoint(data);
+        }
+    }
+
 }

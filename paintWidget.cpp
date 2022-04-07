@@ -7,12 +7,17 @@ paintWidget::paintWidget(QWidget *parent) : QWidget(parent),
 {
     this->setWindowTitle("paint");
 
-    m_chart = new QChart();
-    m_chartView = new QChartView(m_chart,this);
-    m_line = new QSplineSeries;
-    m_axisX = new QValueAxis;
-    m_axisY = new QValueAxis;
-    m_dataQueue.clear();
+    for(int i = 0; i < m_sk_channleNum; i++)
+    {
+        m_chart[i] = new QChart();
+        m_chartView[i] = new QChartView(m_chart[i],this);
+        m_cruveChannel[i] = new QLineSeries;
+        m_axisX[i] = new QValueAxis;
+        m_axisY[i] = new QValueAxis;
+        m_minAxisX[i] = 0;
+        m_maxAxisX[i] = 100;
+        m_dataQueue[i].clear();
+    }
 
     mSetCanvas();
     mDrawCoordinateAxes();
@@ -20,7 +25,7 @@ paintWidget::paintWidget(QWidget *parent) : QWidget(parent),
 
     m_addPointTimer = new QTimer;
     QObject::connect(m_addPointTimer, SIGNAL(timeout()), this, SLOT(on_TimerOutToDraw()));
-    m_addPointTimer->start(1);
+    m_addPointTimer->start(100);
 }
 
 paintWidget::~paintWidget()
@@ -29,11 +34,14 @@ paintWidget::~paintWidget()
         m_addPointTimer->stop();
     delete m_addPointTimer;
 
-    delete m_line;
-    delete m_axisX;
-    delete m_axisY;
-    delete m_chart;
-    delete m_chartView;
+    for(int i = 0; i < m_sk_channleNum; i++)
+    {
+        delete m_cruveChannel[i];
+        delete m_axisX[i];
+        delete m_axisY[i];
+        delete m_chart[i];
+        delete m_chartView[i];
+    }
 }
 
 void paintWidget::mSetCanvas()
@@ -41,74 +49,101 @@ void paintWidget::mSetCanvas()
     resize(m_constWindowWidth, m_constWindowHeight); //reset window
     move(3, 3);
 
-    m_chart = m_chartView->chart();//m_chart: pen
-    //m_chartView->setRubberBand(QChartView::NoRubberBand);
-    m_chartView->setRenderHint(QPainter::Antialiasing);
-    m_chartView->resize(m_constWindowWidth - 10, m_constWindowHeight - 10);
-    m_chartView->setContentsMargins(0,0,0,0);
-    m_chart->legend()->hide();
-    m_chartView->show();
+    int x[m_sk_maxChannleNum] = {0, (m_constWindowWidth - 10) / 2, 0, (m_constWindowWidth - 10) / 2};
+    int y[m_sk_maxChannleNum] = {0, 0, (m_constWindowHeight - 10) / 2, (m_constWindowHeight - 10) / 2};
+    QString title[m_sk_maxChannleNum] = {"ch0", "ch1", "ch2", "ch3"};
+    //int right[] = {(m_constWindowWidth - 10) / 2, 0, (m_constWindowWidth - 10) / 2, 0};
+    //int bottom[] = {(m_constWindowHeight - 10) / 2, (m_constWindowHeight - 10) / 2, 0, 0};
+    for(int i = 0; i < m_sk_channleNum; i++)
+    {
+        m_chart[i] = m_chartView[i]->chart();
+        m_chartView[i]->setRenderHint(QPainter::Antialiasing);
+        m_chartView[i]->resize(m_constWindowWidth / 2 - 5, m_constWindowHeight / 2 - 5);
+        //m_chartView[i]->setContentsMargins(left[i], top[i], right[i], bottom[i]);
+        m_chartView[i]->move(x[i], y[i]);
+        m_chart[i]->legend()->hide();
+        m_chart[i]->setTitle(title[i]);
+        m_chartView[i]->show();
+    }
 }
 
 void paintWidget::mDrawCoordinateAxes()
 {
-    //set axis x
-    m_axisX->setRange(0, 100);
-    m_axisX->setLabelFormat("%d"); //format of value of axis x
-    m_axisX->setGridLineVisible(true);
-    m_axisX->setTickCount(10);   //main scale
-    m_axisX->setMinorTickCount(5);//mini scale
-    m_axisX->setTitleText("t");//title
-    m_chart->addAxis(m_axisX, Qt::AlignBottom);//show axis
+    for(int i = 0; i < m_sk_channleNum; i++)
+    {
+        //set axis x
+        m_axisX[i]->setRange(m_minAxisX[i], m_maxAxisX[i]);
+        m_axisX[i]->setLabelFormat("%d"); //format of value of axis x
+        m_axisX[i]->setGridLineVisible(true);
+        m_axisX[i]->setTickCount(10);   //main scale
+        m_axisX[i]->setMinorTickCount(5);//mini scale
+        m_axisX[i]->setTitleText("t");//title
+        m_chart[i]->addAxis(m_axisX[i], Qt::AlignBottom);//show axis
 
-    //set axis y
-    m_axisY->setRange(-10, 10);
-    m_axisY->setLabelFormat("%d");
-    m_axisY->setGridLineVisible(true);
-    m_axisY->setTickCount(10);
-    //m_axisY->setMinorTickCount(5);
-    m_axisY->setTitleText("v");
-    m_chart->addAxis(m_axisY, Qt::AlignLeft);
+        //set axis y
+        m_axisY[i]->setRange(-110, 110);
+        m_axisY[i]->setLabelFormat("%d");
+        m_axisY[i]->setGridLineVisible(true);
+        m_axisY[i]->setTickCount(10);
+        //m_axisY->setMinorTickCount(5);
+        m_axisY[i]->setTitleText("v");
+        m_chart[i]->addAxis(m_axisY[i], Qt::AlignLeft);
+    }
 }
 
 void paintWidget::mInitImg()
 {
-    m_chart->addSeries(m_line);//set line to chart
-    m_line->attachAxis(m_axisX);//bind datas with axis, this code must be next to "addSeries"
-    m_line->attachAxis(m_axisY);
-    QPen splinePen;
-    splinePen.setColor(Qt::red);
-    splinePen.setWidth(2);
-    m_line->setPen(splinePen);
+    QPen pen[m_sk_maxChannleNum];
+    //QColor color[m_sk_maxChannleNum] = {Qt::darkRed, Qt::darkGreen, Qt::darkBlue, Qt::black};
+    QString lineName[m_sk_maxChannleNum] = {QString::fromLocal8Bit("ch1"), QString::fromLocal8Bit("ch2"), QString::fromLocal8Bit("ch3"), QString::fromLocal8Bit("ch3")};
+
+    for(int  i = 0; i < m_sk_channleNum ; i++)
+    {
+        m_cruveChannel[i]->setName(lineName[i]);
+        m_chart[i]->addSeries(m_cruveChannel[i]);//set line to chart
+        m_cruveChannel[i]->attachAxis(m_axisX[i]);//bind datas with axis, this code must be next to "addSeries"
+        m_cruveChannel[i]->attachAxis(m_axisY[i]);
+        pen[i].setColor(Qt::black);
+        pen[i].setBrush(Qt::black);
+        pen[i].setWidth(1);
+        m_cruveChannel[i]->setPen(pen[i]);
+    }
 }
 
 void paintWidget::on_PaintPoint(unsigned int data)
 {
-    m_dataQueue.enqueue(data);
+    //qDebug()<< "data:" << data;
+    unsigned int ch = (0x03000000 & data) >> 24;
+    unsigned int realData = 0x00FFFFFF & data;
+    if(realData & 0x800000)//extend 24-bit signed negative number to 32-bit signed number
+    {
+        realData += 0xFF000000;
+    }
+    //qDebug()<< "ch:" << ch << "finalData:" << (int)realData;
+    m_dataQueue[ch].enqueue((int)realData * 250 / 4194303);//100 times of the real voltage
 }
 
 void paintWidget::on_TimerOutToDraw()
 {
-    int queueSize = m_dataQueue.size();
-    if(queueSize == 0)return;
+    int queueSize = 0, dataCount = 0;
+    QVector<QPointF> pointData[m_sk_maxChannleNum];
+    for(int  i = 0; i < m_sk_channleNum ; i++)
+    {
+        queueSize = m_dataQueue[i].size();
+        //qDebug()<<"size["<<i<<"]: "<<queueSize;
+        if(queueSize == 0)continue;
 
-    static unsigned int axisX = 0;
-    QVector<QPointF> pointData;
-    pointData = m_line->pointsVector();
-    int dataCount = pointData.size();
-    if(dataCount < 100)
-    {
-        pointData.append(QPointF(axisX, sin(m_dataQueue.dequeue()) * 10));
-        axisX++;
-    }
-    else
-    {
-        pointData.removeFirst();
-        for(int i = 0; i < dataCount - 1; i++)
+        pointData[i] = m_cruveChannel[i]->pointsVector();
+        dataCount = pointData[i].size();
+        if(dataCount >= m_maxAxisX[i] - m_minAxisX[i])
         {
-            pointData[i].rx() -= 1;
+            pointData[i].removeFirst();
+            m_minAxisX[i]++;
+            m_maxAxisX[i]++;
+            m_axisX[i]->setRange(m_minAxisX[i], m_maxAxisX[i]);
         }
-        pointData.append(QPointF(99, sin(m_dataQueue.dequeue()) * 10));
+        pointData[i].append(QPointF(m_axisXIndex[i], m_dataQueue[i].dequeue()));
+        m_axisXIndex[i]++;
+        m_cruveChannel[i]->replace(pointData[i]);
     }
-    m_line->replace(pointData);
 }
